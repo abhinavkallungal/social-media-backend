@@ -1,9 +1,15 @@
 const express =require('express')
 
-const {test,Signup} =require('../controllers/userControllers')
+const {test,Signup, login,sendEmailOtp,varifyEmailOtp} =require('../controllers/userControllers')
+
+
 const router=express.Router()
 
-router.get('/',test)
+router.post('/',sendEmailOtp)
+router.post('/signup',Signup)
+router.post("/login",login)
+router.post("/sendEmailOtp",sendEmailOtp)
+router.post('/verifyEmailOtp',varifyEmailOtp)
 
 
 
