@@ -1,9 +1,11 @@
-const {USER_COLLECTION,OTP_COLLECTION} =require("../config/collections")
+const {USER_COLLECTION,OTP_COLLECTION,POST_COLLECTION} =require("../config/collections")
 const db =require('../config/connection')
 const {sendEmailOtp} =require('../controllers/emailControllers')
 const jwt =require('jsonwebtoken')
 const bcrypt =require('bcrypt')
 const moment =require('moment')
+const objectId=require('mongodb').ObjectID
+
 
 
 module.exports={
@@ -11,13 +13,13 @@ module.exports={
     test:(req,res)=>{
         const value=Math.floor(Math.random() * Math.pow(10, 6))
 
-        let unix = new moment().valueOf();
+        let unix =  moment().valueOf();
 
         db.get().collection(OTP_COLLECTION).createIndex({createdAt: unix}, {expireAfterSeconds: 10});
 
         sendEmailOtp("abhinavkallungal15@gmail.com",value)
 
-        db.get().collection(OTP_COLLECTION).insertOne({value,createdAt:new Date()})
+        db.get().collection(OTP_COLLECTION).insertOne({value,createdAt:unix})
 
         res.json({message:"test request"})
 
@@ -28,7 +30,8 @@ module.exports={
         const {email,password}=req.body
 
        
-        const date=new Date()
+        const date=moment().format();                     
+
 
 
         try{
@@ -73,8 +76,8 @@ module.exports={
 
             let token = await jwt.sign({email:user.email,id:user._id},"secret",{expiresIn:"1h"})
 
-            res.status(200).json({user,token})
-            console.log(math.random());
+            return res.status(200).json({user,token})
+           
 
 
 
@@ -97,7 +100,7 @@ module.exports={
 
             db.get().collection(OTP_COLLECTION).remove({emailto:emailto})
             
-            db.get().collection(OTP_COLLECTION).createIndex({createdAt: unix}, {expireAfterSeconds: 60*5});
+            db.get().collection(OTP_COLLECTION).createIndex({createdAt: unix}, {expireAfterSeconds: 300});
             
             
             db.get().collection(OTP_COLLECTION).insertOne({value,emailto,createdAt:new Date()})
@@ -139,8 +142,10 @@ module.exports={
 
         }
 
-    },
-    
+    }
+
+
+
     
 
 
