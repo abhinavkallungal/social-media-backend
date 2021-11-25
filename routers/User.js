@@ -1,7 +1,7 @@
 const express =require('express')
 
-const {test,Signup, login,sendEmailOtp,varifyEmailOtp} =require('../controllers/userControllers')
-const {addPost,editPost} =require('../controllers/postControllers')
+const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,verifyMobileOtp} =require('../controllers/userControllers')
+const {addPost,editPost,deletePost} =require('../controllers/postControllers')
 
 
 
@@ -12,8 +12,11 @@ router.post('/signup',Signup)
 router.post("/login",login)
 router.post("/sendEmailOtp",sendEmailOtp)
 router.post('/verifyEmailOtp',varifyEmailOtp)
+router.post("/sendMobileOtp",sendMobileOtp)
+router.post("/verifyMobileOtp",verifyMobileOtp)
 router.post("/addpost",addPost)
 router.patch("/editPost",editPost)
+router.delete("/deletePost,",deletePost)
 
 
 
