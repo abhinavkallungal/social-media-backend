@@ -28,14 +28,37 @@ module.exports = {
         res.json({ message: "test request" })
 
     },
+    checkUserName: async (req, res) => {
+        const { username } = req.body
+
+        try {
+
+            let usernameExist = await db.get().collection(USER_COLLECTION).findOne({ username: username })
+
+            if (usernameExist === null) {
+
+                res.status(200).json({ usernameExist: false, message: "username can't exist" })
+
+            } else {
+
+                res.status(400).json({ usernameExist: true, message: "username can exist" })
+
+            }
+        }
+        catch (err) {
+
+            res.status(500).json({ err: err.message })
+
+        }
+
+    },
 
     Signup: async (req, res) => {
 
-        const { email, password } = req.body
+        const { email, password, name, username } = req.body
 
 
         const date = moment().format();
-
 
 
         try {
@@ -43,17 +66,42 @@ module.exports = {
             let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
             console.log(emailExist);
 
-            if (emailExist !== null) return res.status(400).json({ message: "user already exist" })
+            if (emailExist !== null && emailExist.emailVerified === true) return res.status(400).json({ message: "user already exist" })
 
             const hashpassword = await bcrypt.hash(password, 10)
 
-            let result = await db.get().collection(USER_COLLECTION).insertOne({ email, password: hashpassword, date })
+            if (emailExist !== null && emailExist.emailVerified === false) {
 
-            let user = await db.get().collection(USER_COLLECTION).findOne({ _id: result.insertedId })
+                await db.get().collection(USER_COLLECTION).updateOne({ _id: emailExist._id }, { $set: { password: hashpassword, name, username } })
 
-            let token = jwt.sign({ email: user.email, id: user._id }, "secret", { expiresIn: "1h" })
+            } else {
 
-            res.status(200).json({ user, token })
+                await db.get().collection(USER_COLLECTION).insertOne({ email, password: hashpassword, date, name, username, emailVerified: false })
+
+            }
+
+
+
+            const value = Math.floor(Math.random() * Math.pow(10, 6))
+
+            let unix = new moment().valueOf();
+
+            await db.get().collection(OTP_COLLECTION).deleteMany({ email: email })
+
+            await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
+
+
+            await db.get().collection(OTP_COLLECTION).insertOne({ value, email, createdAt: new Date() })
+
+            let status = sendEmailOtp(email, value)
+
+            res.status(200).json({ message: "test request", status })
+
+            // let user = await db.get().collection(USER_COLLECTION).findOne({ _id: result.insertedId })
+
+            // let token = jwt.sign({ email: user.email, id: user._id }, "secret", { expiresIn: "1h" })
+
+            // res.status(200).json({ user, token })
 
 
         } catch (err) {
@@ -67,22 +115,45 @@ module.exports = {
     login: async (req, res) => {
 
         const { email, password } = req.body
+        console.log(req.body);
 
         try {
+            console.log(1);
 
-            let user = await db.get().collection(USER_COLLECTION).findOne({ email })
-
+            let user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+            console.log(2);
             if (user === null) return res.status(400).json({ message: "invalid username" })
-
+            console.log(3);
             let isPasswordCorrect = await bcrypt.compare(password, user.password)
-
+            console.log(4);
             if (!isPasswordCorrect) return res.status(400).json({ message: "invalid Password" })
+            console.log(5);
 
-            let token = await jwt.sign({ email: user.email, id: user._id }, "secret", { expiresIn: "1h" })
+            if(!user.emailVerified){
 
-            return res.status(200).json({ user, token })
+                const value = Math.floor(Math.random() * Math.pow(10, 6))
+
+                let unix = new moment().valueOf();
+    
+                await db.get().collection(OTP_COLLECTION).deleteMany({ email: email })
+    
+                await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
+    
+    
+                await db.get().collection(OTP_COLLECTION).insertOne({ value, email, createdAt: new Date() })
+    
+                let status = sendEmailOtp(email, value)
+    
+                res.status(200).json({ user, message: "test request", status })
 
 
+            }else{
+
+                let token = await jwt.sign({ email: user.email, id: user._id , isUser:true}, "secret", { expiresIn: "1h" })
+
+                return res.status(200).json({ user, token })
+
+            }
 
 
         } catch (err) {
@@ -92,28 +163,33 @@ module.exports = {
         }
     },
 
-    sendEmailOtp: (req, res) => {
+    sendEmailOtp: async (req, res) => {
 
-        const emailto = req.body.emailto
+        const emailto = req.body.email
 
         try {
+
+            let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+            console.log(emailExist);
+
+            if (emailExist !== null) return res.status(400).json({ message: "user already exist" })
+
 
             const value = Math.floor(Math.random() * Math.pow(10, 6))
 
             let unix = new moment().valueOf();
 
-            db.get().collection(OTP_COLLECTION).remove({ emailto: emailto })
+            await db.get().collection(OTP_COLLECTION).remove({ emailto: emailto })
 
-            db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
+            await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
 
 
-            db.get().collection(OTP_COLLECTION).insertOne({ value, emailto, createdAt: new Date() })
+            await db.get().collection(OTP_COLLECTION).insertOne({ value, emailto, createdAt: new Date() })
 
             let status = sendEmailOtp(emailto, value)
 
-            console.log("status", status);
+            res.status(200).json({ message: "test request", status })
 
-            res.json({ message: "test request" })
         } catch (err) {
 
             res.status(500).json({ err: err.message })
@@ -124,21 +200,47 @@ module.exports = {
 
 
     varifyEmailOtp: async (req, res) => {
-        const { emailto, otp } = req.body
-        console.log(emailto, otp);
+        const { email, otp } = req.body
+        console.log(email, otp);
 
         try {
+            console.log(">>>>>>>>1")
 
-            const value = await db.get().collection(OTP_COLLECTION).findOne({ emailto: emailto })
+            const value = await db.get().collection(OTP_COLLECTION).findOne({ email: email })
+            console.log(">>>>>>>>2")
 
             if (value === null) return res.status(400).json({ message: "invalid otp or otp expired " })
+            console.log(">>>>>>>>3")
 
-            if (value.value !== otp) return res.status(400).json({ message: " otp can't match " })
+            if (value.value != otp) return res.status(400).json({ message: " otp can't match " })
+            console.log(">>>>>>>>4")
 
-            db.get().collection(OTP_COLLECTION).deleteOne({_id:value._id}).then(()=>{    
-                
-                return res.status(200).json({ message: "otp varified" })
-                
+            db.get().collection(OTP_COLLECTION).deleteOne({ _id: value._id }).then(() => {
+                console.log(">>>>>>>>5")
+
+                db.get().collection(USER_COLLECTION).updateOne({ email: email }, { $set: { emailVerified: true } }).then(async () => {
+
+                    let user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+
+                    let token = jwt.sign({ email: user.email, id: user._id,isUser:true }, "secret", { expiresIn: "1h" })
+
+                    res.status(200).json({ user, token })
+
+
+                }).catch((err) => {
+                    console.log(">>>>>>>>8")
+
+                    res.status(500).json({ err: err.message })
+
+                })
+
+                console.log(">>>>>>>>9")
+
+            }).catch((err) => {
+                console.log(">>>>>>>>10")
+
+                res.status(500).json({ err: err.message })
+
             })
 
 
@@ -150,6 +252,8 @@ module.exports = {
         }
 
     },
+
+
     sendMobileOtp: (req, res) => {
 
 

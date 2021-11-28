@@ -1,6 +1,6 @@
 const express =require('express')
 
-const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,verifyMobileOtp} =require('../controllers/userControllers')
+const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,verifyMobileOtp,checkUserName} =require('../controllers/userControllers')
 const {addPost,editPost,deletePost} =require('../controllers/postControllers')
 
 
@@ -8,6 +8,7 @@ const {addPost,editPost,deletePost} =require('../controllers/postControllers')
 const router=express.Router()
 
 router.post('/',sendEmailOtp)
+router.post('/checkUserName',checkUserName)
 router.post('/signup',Signup)
 router.post("/login",login)
 router.post("/sendEmailOtp",sendEmailOtp)
