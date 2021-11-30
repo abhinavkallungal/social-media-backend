@@ -5,20 +5,19 @@ const objectId=require('mongodb').ObjectID
 
 
 
+
 module.exports={
 
     addPost:async(req,res)=>{
-        //req.body  text fiels type  save Accessibility
-
-        const {text ,fiels, type,  save, Accessibility,userId}=req.body
+       
+        const {desc ,files,save, Accessibility,userId}=req.body
 
 
         try {
 
             db.get().collection(POST_COLLECTION).insertOne({
-                text ,
-                fiels, 
-                type,  
+                desc,
+                files, 
                 save, 
                 Accessibility,
                 likes: new Array(),
@@ -28,14 +27,35 @@ module.exports={
                 report:0,
                 postedDate:moment().format()
 
-            }).then((data)=>{
-                res.status(200).json({message:"post added"})
+            }).then(async(data)=>{
+                console.log(data);
+
+               const post= await db.get().collection(POST_COLLECTION).findOne({"_id":data.insertedId})
+
+                res.status(200).json({message:"post added",post})
+        
+
             })
 
             
-        } catch (error) {
+        } catch (err) {
 
             res.status(500).json({err:err.message})
+            
+        }
+
+    },
+    getAllPosts:async(req,res)=>{
+
+        try {
+            const posts= await db.get().collection(POST_COLLECTION).find().toArray()
+
+            res.status(200).json({message:"post added",posts})
+            
+        } catch (err) {
+
+            res.status(500).json({err:err.message})
+
             
         }
 

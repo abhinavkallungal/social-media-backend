@@ -5,6 +5,7 @@ var morgan = require('morgan')
 const cors = require('cors')
 const bodyParser =require('body-parser')
 const UserRouter=require('./routers/User')
+const AdminRouter=require('./routers/Admin')
 const db = require('./config/connection');
 
 const app=express()
@@ -18,6 +19,7 @@ app.use(express.json());
 
 
 app.use('/api/v1/user/',UserRouter);
+app.use('/api/v1/admin/',AdminRouter);
 
 app.use(morgan('tiny'))
 

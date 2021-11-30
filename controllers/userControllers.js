@@ -76,7 +76,7 @@ module.exports = {
 
             } else {
 
-                await db.get().collection(USER_COLLECTION).insertOne({ email, password: hashpassword, date, name, username, emailVerified: false })
+                await db.get().collection(USER_COLLECTION).insertOne({ email, password: hashpassword, date, name, username, emailVerified: false , isActive:true})
 
             }
 
@@ -129,7 +129,13 @@ module.exports = {
             if (!isPasswordCorrect) return res.status(400).json({ message: "invalid Password" })
             console.log(5);
 
+            if (!user.isActive) return res.status(400).json({ message: "This Account was Blocked" })
+            console.log(6);
+
+
             if(!user.emailVerified){
+                console.log(7);
+
 
                 const value = Math.floor(Math.random() * Math.pow(10, 6))
 
@@ -148,6 +154,8 @@ module.exports = {
 
 
             }else{
+                console.log(8);
+
 
                 let token = await jwt.sign({ email: user.email, id: user._id , isUser:true}, "secret", { expiresIn: "1h" })
 
@@ -157,6 +165,8 @@ module.exports = {
 
 
         } catch (err) {
+            console.log(9);
+
 
             res.status(500).json({ err: err.message })
 
@@ -172,7 +182,7 @@ module.exports = {
             let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
             console.log(emailExist);
 
-            if (emailExist !== null) return res.status(400).json({ message: "user already exist" })
+            if (emailExist !== null) return res.status(400).json({ message: "Email id already exist" })
 
 
             const value = Math.floor(Math.random() * Math.pow(10, 6))

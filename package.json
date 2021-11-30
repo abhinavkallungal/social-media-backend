@@ -15,6 +15,7 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "jsonwebtoken": "^8.5.1",
+    "jwt-decode": "^3.1.2",
     "moment": "^2.29.1",
     "mongodb": "^4.2.0",
     "morgan": "^1.10.0",
