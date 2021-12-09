@@ -1,7 +1,8 @@
-const {POST_COLLECTION} =require("../config/collections")
+const {POST_COLLECTION,USER_COLLECTION} =require("../config/collections")
 const db =require('../config/connection')
 const moment =require('moment')
 const objectId=require('mongodb').ObjectID
+const { ObjectId } = require("bson")
 
 
 
@@ -22,7 +23,7 @@ module.exports={
                 Accessibility,
                 likes: new Array(),
                 comment: new Array(),
-                userId,
+                userId:ObjectId(userId),
                 status:"active",
                 report:0,
                 postedDate:moment().format()
@@ -48,7 +49,28 @@ module.exports={
     getAllPosts:async(req,res)=>{
 
         try {
-            const posts= await db.get().collection(POST_COLLECTION).find().toArray()
+            let posts=await db.get().collection(POST_COLLECTION).aggregate([
+                {
+                    $match: {status:"active"},
+                },
+                {
+                    $lookup: {
+                      from: USER_COLLECTION,
+                      localField: "userId",
+                      foreignField: "_id",
+                      as: "user",
+                    },
+                },
+                {
+                    $unwind: "$user",
+                  },
+                  { $sort : { postedDate:-1 } }
+
+              
+                
+                 
+              ]).toArray()
+              console.log(posts);
 
             res.status(200).json({message:"post added",posts})
             
