@@ -1,35 +1,39 @@
 
 const express = require('express');
-const router  = express.Router();
+const router = express.Router();
 
-const jwt      = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const passport = require('passport');
 
+router.get('/login/success', (req, res) => {
+    console.log(">>>>>>>>>>>>>>>>>>>>>>",req);
+    if (req.user) {
+        res.redirect('/').json({
+            success: true,
+            message: "successfull",
+            user: req.user,
+            cookies: req.cookies
+        })
 
-/* POST login. */
-router.get('/google', function (req, res) {
+    }
+})
 
-    passport.authenticate('local', {session: false}, (err, user, info) => {
-        console.log(err);
-        if (err || !user) {
-            return res.status(400).json({
-                message: info ? info.message : 'Login failed',
-                user   : user
-            });
-        }
+router.get('/login/failed', (req, res) => {
 
-        req.login(user, {session: false}, (err) => {
-            if (err) {
-                res.send(err);
-            }
+    res.status(401).json({
+        success: false,
+        message: "failed",
 
-            const token = jwt.sign(user ,'  secret');
-
-            return res.json({user, token});
-        });
     })
-    (req, res);
+})
 
-});
+
+
+
+
+router.get('/google', passport.authenticate('google', {  scope:['email']}));
+
+router.get('/google/callback', passport.authenticate('google', { successRedirect:"http://localhost:3000/login/success" ,failureRedirect: '/login/failed' }));
+
 
 module.exports = router;

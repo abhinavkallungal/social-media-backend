@@ -1,80 +1,60 @@
-const passport = require('passport')
-const { passportEmailverify } = require('../middlewares/auth')
-const jwt = require('jsonwebtoken')
-const passportJWT =require('passport-jwt')
-const { USER_COLLECTION } = require("../config/collections")
-const db = require('../config/connection')
-const ExtractJWT = passportJWT.ExtractJwt;
-
-
+var passport = require("passport");
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
-const JWTStrategy   = passportJWT.Strategy;
+const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION } = require("../config/collections")
+const db = require('../config/connection')
 
-const GOOGLE_CLIENT_ID = "840612483361-sbo6qtclrijsd52dlo6hm2g0chdmjt5i.apps.googleusercontent.com"
+passport.serializeUser(function(user, done) {
+  console.log("serializeUser");
+	done(null, user);
+});
 
-const GOOGLE_CLIENT_SECRET = "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"
+passport.deserializeUser(function(user, done) {
+  console.log("deserializeUser");
+
+	done(null, user);
+});
+
+
+const GOOGLE_CLIENT_ID = "840612483361-uh8355gngtkol7499l5gsnatkdn85s3g.apps.googleusercontent.com"
+
+const GOOGLE_CLIENT_SECRET = "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"
+
 
 passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback",
-    profileFields: ['emails']
-},
-    function (accessToken, refreshToken, profile, done) {
+    callbackURL: "/auth/google/callback"
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log(profile.emails[0].value)
+    
+    db.get().collection(USER_COLLECTION).findOne({email:profile.emails[0].value}).then((user)=>{
+      console.log(">>>>",user);
 
-        if (profile.emails[0].value) {
+      done(null,user)
 
-            const verifyEmail = async (email) => {
+    }).catch((err)=>{
+      done(null,err)
 
-                try {
-
-                    let user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
-
-                    if (!user) return done(null, false, {message: 'Incorrect email or password.'});
-
-
-                    if (!user.isActive) return done(null, false, {message: 'Account is not activeted'});
+    })
 
 
-                    return cb(null, user, { message: 'Logged In Successfully'});
-
-
-                } catch (err) {
-
-                    return done(err); 
-
-                }
-            }
-            verifyEmail(profile.emails[0].value)
-
-        }
-
-
-    }
+   
+  }
 ));
 
-passport.use(new JWTStrategy({
-    jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey   : 'secret'
-},
-function (jwtPayload, cb) {
-
-    //find the user in db if needed
-    return UserModel.findOneById(jwtPayload.id)
-        .then(user => {
-            return cb(null, user);
-        })
-        .catch(err => {
-            return cb(err);
-        });
-}
-));
-
-passport.serializeUser((user, done) => {
-    done(null, user)
-})
 
 
-passport.deserializeUser((user, done) => {
-    done(null, user)
-})
+
+
+
+
+
+
+
+
+
+
+
+
+

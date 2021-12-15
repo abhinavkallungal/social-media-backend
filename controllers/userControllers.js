@@ -146,6 +146,8 @@ module.exports = {
         }
 
     },
+
+    
     login: async (req, res) => {
 
         const { email, password, username, phone } = req.body
@@ -528,7 +530,7 @@ module.exports = {
                 {
                     $match: { "_id": objectId(userId) }
                 }
-            ])
+            ]).toArray()
 
 
             let posts = await db.get().collection(POST_COLLECTION).aggregate([
@@ -610,13 +612,12 @@ module.exports = {
 
     },
     DoSearch: async (req, res) => {
-        console.log(req.body);
 
         const { keyword, userId } = req.body
-        console.log(keyword);
         try {
             let user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
-            let users = await db.get().collection(USER_COLLECTION).aggregate([
+            console.log(userId);
+            let searchresult = await db.get().collection(USER_COLLECTION).aggregate([
 
                 {
                     $match: { name: { $regex: `${keyword}`, $options: 'i' }, username: { $regex: `${keyword}`, $options: 'i' } }
@@ -624,18 +625,28 @@ module.exports = {
 
                 {
                     $addFields: {
-                        following: { 
-                            $cond: [ 
-                                { $in: [ "$_id",user.followings  ] }, 
-                                true, 
-                                false 
-                            ] 
-                         }
+                        following: {
+                            $cond: [
+                                { $in: ["$_id", user.followings] },
+                                true,
+                                false
+                            ]
+                        }
                     }
                 }
 
 
             ]).toArray()
+
+           let users= searchresult.filter((item)=>{
+              
+                if(userId !== item._id+""){
+                  
+                    return item;
+                }
+            });
+
+            
             res.status(200).json(users)
 
         } catch (error) {
