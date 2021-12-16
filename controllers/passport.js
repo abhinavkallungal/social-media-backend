@@ -1,7 +1,8 @@
 var passport = require("passport");
 var GoogleStrategy = require('passport-google-oauth20').Strategy;
-const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION } = require("../config/collections")
+const { USER_COLLECTION } = require("../config/collections")
 const db = require('../config/connection')
+require('dotenv').config()
 
 passport.serializeUser(function(user, done) {
   console.log("serializeUser");
@@ -15,9 +16,9 @@ passport.deserializeUser(function(user, done) {
 });
 
 
-const GOOGLE_CLIENT_ID = "840612483361-uh8355gngtkol7499l5gsnatkdn85s3g.apps.googleusercontent.com"
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 
-const GOOGLE_CLIENT_SECRET = "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"
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 
 
 passport.use(new GoogleStrategy({
@@ -34,7 +35,7 @@ passport.use(new GoogleStrategy({
       done(null,user)
 
     }).catch((err)=>{
-      done(null,err)
+      done(nullerr)
 
     })
 

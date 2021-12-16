@@ -1,4 +1,6 @@
 const mongoClient =require("mongodb").MongoClient
+require('dotenv').config()
+
 
 const state = {
     db:null
@@ -6,8 +8,8 @@ const state = {
 }
 
 module.exports.connect=function(done){
-     const url ="mongodb://localhost:27017/"
-     const dbName="socialMedia"
+     const url =process.env.MONGODB_URI
+     const dbName=process.env.MONGODB_NAME 
      mongoClient.connect(url,(err,data)=>{
         if(err){
             console.log("err",err);

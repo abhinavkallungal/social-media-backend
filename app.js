@@ -1,6 +1,8 @@
 const express = require("express");
 const JWT = require("jsonwebtoken");
 const path =require('path')
+require('dotenv').config()
+
 var morgan = require('morgan')
 const cors = require('cors')
 const passport =require('passport')
@@ -20,6 +22,8 @@ const userHandlers=require('./socket/userHandlers')
 const app=express()
 
 const PORT=process.env.PORT
+
+console.log(PORT);
 
 app.use(cors());
 app.use(passport.initialize())
@@ -50,7 +54,7 @@ const server=app.listen(PORT,(err)=>{
     if(err){
         console.log(err);
     }else{
-        console.log("server started");
+        console.log("server started at ",PORT);
     }
 })
 

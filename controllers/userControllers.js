@@ -10,9 +10,6 @@ const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
 const TWILIO_SERVICE_ID = process.env.TWILIO_SERVICE_ID
 const twilioClient = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 const objectId = require('mongodb').ObjectID
-const { UserBindingContext } = require("twilio/lib/rest/chat/v2/service/user/userBinding")
-const { resolveContent } = require("nodemailer/lib/shared")
-
 
 
 module.exports = {
@@ -58,6 +55,7 @@ module.exports = {
             res.status(500).json({ err: err.message })
 
         }
+
 
     },
     // this api for signup . this api take email or phone  and name username password  on req.body object
