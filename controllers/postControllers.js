@@ -2,7 +2,7 @@ const {POST_COLLECTION,USER_COLLECTION} =require("../config/collections")
 const db =require('../config/connection')
 const moment =require('moment')
 const objectId=require('mongodb').ObjectID
-const { ObjectId } = require("bson")
+
 
 
 
@@ -70,7 +70,6 @@ module.exports={
                 
                  
               ]).toArray()
-              console.log(posts);
 
             res.status(200).json({message:"post added",posts})
             
