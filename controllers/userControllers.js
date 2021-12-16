@@ -7,7 +7,8 @@ const bcrypt = require('bcrypt')
 const moment = require('moment')
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
-const twilioClient = require('twilio')("ACd5ee46f39f1c73c489ff0b97f5a2a698", "05a7d095b06dad7a9ee1d1b414ee2e9a")
+const TWILIO_SERVICE_ID = process.env.TWILIO_SERVICE_ID
+const twilioClient = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 const objectId = require('mongodb').ObjectID
 const { UserBindingContext } = require("twilio/lib/rest/chat/v2/service/user/userBinding")
 const { resolveContent } = require("nodemailer/lib/shared")
@@ -123,7 +124,7 @@ module.exports = {
                 }
 
                 twilioClient.verify
-                    .services("VA9683c9cb08943c515f6c651ef4ac0e0c")
+                    .services(TWILIO_SERVICE_ID)
                     .verifications.create({
                         to: `+91${phone}`,
                         channel: "sms"
@@ -218,7 +219,7 @@ module.exports = {
                 if (!user.phoneVerified) {
                     try {
                         twilioClient.verify
-                            .services("VA9683c9cb08943c515f6c651ef4ac0e0c")
+                            .services(TWILIO_SERVICE_ID)
                             .verifications.create({
                                 to: `+91${phone}`,
                                 channel: "sms"
@@ -288,7 +289,7 @@ module.exports = {
 
                     try {
                         twilioClient.verify
-                            .services("VA9683c9cb08943c515f6c651ef4ac0e0c")
+                            .services(TWILIO_SERVICE_ID)
                             .verifications.create({
                                 to: `+91${phone}`,
                                 channel: "sms"
@@ -452,7 +453,7 @@ module.exports = {
 
         try {
             twilioClient.verify
-                .services("VA9683c9cb08943c515f6c651ef4ac0e0c")
+                .services(TWILIO_SERVICE_ID)
                 .verifications.create({
                     to: `+91${phone}`,
                     channel: "sms"
@@ -475,7 +476,7 @@ module.exports = {
 
         try {
             twilioClient.verify
-                .services("VA9683c9cb08943c515f6c651ef4ac0e0c")
+                .services(TWILIO_SERVICE_ID)
                 .verificationChecks
                 .create({
                     to: `+91${phone}`,
