@@ -9,6 +9,9 @@ const {verifyLogin}= require('../middlewares/auth')
 
 const router=express.Router()
 
+router.get('/',test)
+
+
 router.post('/',sendEmailOtp)
 //api for check username available for signup 
 router.post('/checkUserName',checkUserName)
@@ -27,8 +30,9 @@ router.post("/getProfileDetalils",verifyLogin,getProfileDetails)
 router.post("/addAccountDetails",verifyLogin,addAccountDetails)
 
 
-router.post("/search",DoSearch)
+router.post("/search",verifyLogin,DoSearch)
 router.post("/follow",verifyLogin,Dofollow)
+
 
 
 

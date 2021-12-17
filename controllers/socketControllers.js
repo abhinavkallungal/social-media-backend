@@ -28,5 +28,21 @@ module.exports={
 
             
         })
+    },
+    removeOnlineuser:({soketId})=>{
+        console.log(soketId);
+        return new Promise(async(resolve,reject)=>{
+            let user =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({soketId:soketId})
+            console.log(user);
+            if(user){
+                db.get().collection(ONLINE_USERS_COLLECTION).removeOne({soketId:soketId}).then(()=>{
+                
+                }).catch(()=>{
+                    
+                })
+
+            }
+
+        })
     }
 }

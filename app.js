@@ -14,6 +14,7 @@ const AuthRouter=require('./routers/auth')
 const AdminRouter=require('./routers/Admin')
 const db = require('./config/connection');
 const userHandlers=require('./socket/userHandlers')
+const 
 
 
 
@@ -65,13 +66,15 @@ const io = socket(server);
 
 
 const onConnection = (socket) => {
-  console.log(">>>>>>>>>>>",socket.id); 
   userHandlers(io, socket);
 
 
   socket.on('disconnect',()=>{
     console.log("disconnect",socket.id);
   })
+
+  socket.on('disconnect',disconnect(socket.id))
+
 }
 
 

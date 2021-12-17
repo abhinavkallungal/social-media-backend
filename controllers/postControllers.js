@@ -23,7 +23,7 @@ module.exports={
                 Accessibility,
                 likes: new Array(),
                 comment: new Array(),
-                userId:ObjectId(userId),
+                userId:objectId(userId),
                 status:"active",
                 report:0,
                 postedDate:moment().format()
@@ -40,6 +40,7 @@ module.exports={
 
             
         } catch (err) {
+            console.log(err);
 
             res.status(500).json({err:err.message})
             

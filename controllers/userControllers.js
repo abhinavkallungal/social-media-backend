@@ -15,16 +15,7 @@ const objectId = require('mongodb').ObjectID
 module.exports = {
 
     test: (req, res) => {
-        const value = Math.floor(Math.random() * Math.pow(10, 6))
-
-        let unix = moment().valueOf();
-
-        db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 10 });
-
-        sendEmailOtp("abhinavkallungal15@gmail.com", value)
-
-        db.get().collection(OTP_COLLECTION).insertOne({ value, createdAt: unix })
-
+    
         res.json({ message: "test request" })
 
     },
@@ -96,7 +87,7 @@ module.exports = {
 
                 let status = sendEmailOtp(email, value)
 
-                res.status(200).json({ message: "test request", status })
+                res.status(200).json({ message: "Email Otp send", status })
 
 
 
@@ -189,7 +180,7 @@ module.exports = {
 
                         let status = sendEmailOtp(email, value)
 
-                        res.status(200).json({ user, message: "test request", status })
+                        res.status(200).json({ user, message: "email Otp send", status })
 
 
 
@@ -273,7 +264,7 @@ module.exports = {
 
                         let status = sendEmailOtp(email, value)
 
-                        res.status(200).json({ user, message: "test request", status })
+                        res.status(200).json({ user, message: "otp send", status })
 
                     } catch (error) {
 
@@ -332,7 +323,7 @@ module.exports = {
 
                 let status = sendEmailOtp(email, value)
 
-                res.status(200).json({ user, message: "test request", status })
+                res.status(200).json({ user, message: "email send", status })
 
 
             } else {
@@ -354,6 +345,8 @@ module.exports = {
 
         }
     },
+
+    
 
     sendEmailOtp: async (req, res) => {
 
@@ -380,7 +373,7 @@ module.exports = {
 
             let status = sendEmailOtp(emailto, value)
 
-            res.status(200).json({ message: "test request", status })
+            res.status(200).json({ message: "email send", status })
 
         } catch (err) {
 
