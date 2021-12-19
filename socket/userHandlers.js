@@ -2,12 +2,10 @@ const { addOnlineUser, removeOnlineuser } = require("../controllers/socketContro
 const db =require('../config/connection')
 const {POST_COLLECTION} =require('../config/collections')
 const { ObjectId } = require("mongodb")
-const {socketIo}=require('./socket')
 
 
 
 module.exports = (io, socket) => {
-    socketIo(socket,io)
 
     const adding = (payload) => {
         console.log("create paylod", payload);

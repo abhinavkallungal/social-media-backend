@@ -3,5 +3,6 @@ module.exports={
     ADMIN_COLLECTION:"admin",
     OTP_COLLECTION:"emailotp",
     POST_COLLECTION:"posts",
-    ONLINE_USERS_COLLECTION:"onlineUsers"
+    ONLINE_USERS_COLLECTION:"onlineUsers",
+    COMMENT_COLLECTION:'comments'
 }
