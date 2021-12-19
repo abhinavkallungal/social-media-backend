@@ -35,7 +35,7 @@ module.exports={
             let user =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({soketId:soketId})
             console.log(user);
             if(user){
-                db.get().collection(ONLINE_USERS_COLLECTION).removeOne({soketId:soketId}).then(()=>{
+                db.get().collection(ONLINE_USERS_COLLECTION).deleteOne({soketId:soketId}).then(()=>{
                 
                 }).catch(()=>{
                     

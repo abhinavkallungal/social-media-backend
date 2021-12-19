@@ -715,7 +715,60 @@ module.exports = {
 
         }
 
-    }
+    },
+
+    addProfilePhoto:(req,res)=>{
+        console.log(req.body);
+        const {profilePhoto,currentuserId}=req.body
+
+        try {
+            
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $push: { ProfilePhotos: profilePhoto } }).then((data) => {
+                console.log(data);
+
+                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user)=>{
+
+                    res.status(200).json({user, message:"profile photo updated"})
+
+                })
+
+            })
+
+        } catch (error) {
+            console.log(error);
+
+            res.status(500).json({ message: error.message })
+
+            
+        }
+
+    },
+    addCoverPhoto:(req,res)=>{
+        console.log(req.body);
+        const {coverPhoto,currentuserId}=req.body
+
+        try {
+            
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $set: { coverPhoto: coverPhoto } },{ upsert: true }  ).then((data) => {
+                console.log(data);
+
+                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user)=>{
+
+                    res.status(200).json({user, message:"cover photo updated"})
+
+                })
+
+            })
+
+        } catch (error) {
+            console.log(error);
+
+            res.status(500).json({ message: error.message })
+
+            
+        }
+
+    },
 
 
 

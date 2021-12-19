@@ -14,7 +14,7 @@ const AuthRouter=require('./routers/auth')
 const AdminRouter=require('./routers/Admin')
 const db = require('./config/connection');
 const userHandlers=require('./socket/userHandlers')
-const 
+const {removeOnlineuser} =require('./controllers/socketControllers') 
 
 
 
@@ -71,9 +71,9 @@ const onConnection = (socket) => {
 
   socket.on('disconnect',()=>{
     console.log("disconnect",socket.id);
+    removeOnlineuser({soketId:socket.id})
   })
 
-  socket.on('disconnect',disconnect(socket.id))
 
 }
 

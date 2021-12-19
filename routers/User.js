@@ -1,8 +1,8 @@
 const express =require('express')
 
-const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,Dofollow,
-    verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts} =require('../controllers/postControllers')
+const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,Dofollow,addProfilePhoto,
+    addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
+const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave} =require('../controllers/postControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
 
@@ -28,10 +28,14 @@ router.patch("/editPost",editPost)
 router.delete("/deletePost,",deletePost)
 router.post("/getProfileDetalils",verifyLogin,getProfileDetails)
 router.post("/addAccountDetails",verifyLogin,addAccountDetails)
+router.post("/addProfilePhoto",verifyLogin,addProfilePhoto)
+router.post("/addCoverPhoto",verifyLogin,addCoverPhoto)
 
 
 router.post("/search",verifyLogin,DoSearch)
 router.post("/follow",verifyLogin,Dofollow)
+router.post("/postLike",verifyLogin,DoPostLike)
+router.post("/postSave",verifyLogin,DoPostSave)
 
 
 
