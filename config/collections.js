@@ -4,5 +4,6 @@ module.exports={
     OTP_COLLECTION:"emailotp",
     POST_COLLECTION:"posts",
     ONLINE_USERS_COLLECTION:"onlineUsers",
-    COMMENT_COLLECTION:'comments'
+    COMMENT_COLLECTION:'comments',
+    REPORTS_COLLECTION:'reports'
 }

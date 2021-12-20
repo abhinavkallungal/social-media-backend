@@ -2,7 +2,7 @@ const express =require('express')
 
 const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,Dofollow,addProfilePhoto,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment} =require('../controllers/postControllers')
+const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport} =require('../controllers/postControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
 
@@ -38,6 +38,7 @@ router.post("/postLike",verifyLogin,DoPostLike)
 router.post("/postSave",verifyLogin,DoPostSave)
 router.post("/Deletepost",verifyLogin,DoDeletepost)
 router.post("/comment",verifyLogin,DoComment)
+router.post("/report",verifyLogin,DoReport)
 
 
 

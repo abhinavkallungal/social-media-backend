@@ -1,4 +1,4 @@
-const { POST_COLLECTION, USER_COLLECTION,COMMENT_COLLECTION } = require("../config/collections")
+const { POST_COLLECTION, USER_COLLECTION,COMMENT_COLLECTION ,REPORTS_COLLECTION} = require("../config/collections")
 const db = require('../config/connection')
 const moment = require('moment')
 const objectId = require('mongodb').ObjectID
@@ -299,6 +299,52 @@ module.exports = {
                         console.log(newcomment);
                     res.status(200).json({message :"comment added",comment:newcomment})
                 })
+            
+            })
+            
+            
+                
+        } catch (error) {
+            console.log(error);
+
+            res.status(500).json({ err: err.message })
+
+
+        }
+
+
+
+
+
+
+    },
+
+    DoReport: async (req, res) => {
+        const { userId, postId,optoion,message } = req.body
+
+        if(message.trim()=="") return res.status(204).json({message:"Message Is Empty"})
+       
+
+        try {
+            db.get().collection(REPORTS_COLLECTION).insertOne({postId:objectId(postId),userId:objectId(userId),message,date:moment().format(),optoion}).then(async(result)=>{
+              let post=  await db.get().collection(POST_COLLECTION).findOne({_id:objectId(postId)})
+              let noOfReport=post?.report
+              if(noOfReport>=9){
+
+                  db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)}, {$set:{status:"Block"}, $inc: { report: 1}} ).then( ()=>{
+
+                      res.status(200).json({message:" Post Reported ",})
+                  })
+
+              }else{
+                db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)},{ $inc: { report: 1}} ).then( ()=>{
+
+                    res.status(200).json({message :" Post Reported ",})
+                })
+
+              }
+   
+                  
             
             })
             
