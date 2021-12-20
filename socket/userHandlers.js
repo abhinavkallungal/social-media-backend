@@ -1,6 +1,6 @@
 const { addOnlineUser, removeOnlineuser } = require("../controllers/socketControllers")
 const db =require('../config/connection')
-const {POST_COLLECTION} =require('../config/collections')
+const {POST_COLLECTION,USER_COLLECTION, ONLINE_USERS_COLLECTION,NOTIFICATIONS_COLLECTION} =require('../config/collections')
 const { ObjectId } = require("mongodb")
 
 
@@ -9,17 +9,63 @@ module.exports = (io, socket) => {
 
     const adding = (payload) => {
         console.log("create paylod", payload);
-        addOnlineUser({ soketId: payload.id, userId: payload.userId })
+        addOnlineUser({ socketId: payload.id, userId: payload.userId })
         io.to(payload.id).emit("save", "added in to db");
     }
 
-    const readOrder = (orderId, callback) => {
+    const LikeNotification=async ({NotificationId})=>{
+        let notifications= await db.get().collection(NOTIFICATIONS_COLLECTION).aggregate([
+            {
+                $match: { "_id": ObjectId(NotificationId) }
+            },
+            {
+                $lookup: {
+                    from: USER_COLLECTION,
+                    localField: "from",
+                    foreignField: "_id",
+                    as: "user",
+                },
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $project: {
+                    _id: 1,
+                    from: 1,
+                    to : 1,
+                    type:1,
+                    postId:1,
+                    read:1,
+                    date: 1,
+                    user: {
+                        name: 1,
+                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                    }
+    
+                }
+    
+            },
+    
+        ]).toArray()
+
+        console.log(">>>>>>>>",notifications[0]);
+        let OnlineUserExist=await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(notifications[0].to) })
+        console.log(">>>>>>>>",OnlineUserExist);
+
+        if(OnlineUserExist){
+    
+            socket.to(OnlineUserExist.socketId).emit("sendLikeNotification",notifications[0] );
+            console.log("send",socket.id);
+        }
 
     }
 
+   
+
     const disconnect = (socketId) => {
-        console.log(soketId, ">>>>>>>>>>>>>>>");
-        removeOnlineuser({ soketId })
+        console.log(socketId, ">>>>>>>>>>>>>>>");
+        removeOnlineuser({ socketId })
     }
     const DoPostLike= async({ postId, userId }) => {
         console.log(postId, userId);
@@ -54,14 +100,9 @@ module.exports = (io, socket) => {
         console.log("fsdfasd");
     }
 
-    socket.on("login", adding);
-    socket.on("test", (msg) => {
-        console.log(msg);
-        io.emit("broadcast", msg)
-    })
-    socket.on('dolike', ({ userId, socketId }) => {
-        console.log(">>>>", userId);
-    })
+    socket.on("login",adding);
+   
+    socket.on('dolike', LikeNotification)
 
 }
 

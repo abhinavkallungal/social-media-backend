@@ -1,4 +1,4 @@
-const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION } = require("../config/collections")
+const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION ,NOTIFICATIONS_COLLECTION} = require("../config/collections")
 const db = require('../config/connection')
 const { sendEmailOtp } = require('../controllers/emailControllers')
 const jwt = require('jsonwebtoken')
@@ -665,11 +665,26 @@ module.exports = {
                 console.log("if");
 
                 db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $push: { followings: objectId(userId) } }).then((data) => {
-                    console.log(data);
 
-                    db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $push: { followers: objectId(currentuserId) } }).then(() => {
+                    db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $push: { followers: objectId(currentuserId) } }).then(async() => {
 
-                        res.status(200).json({ follow: true })
+                       let  NotificationExist=await db.get().collection(NOTIFICATIONS_COLLECTION).findOne({from: objectId(currentuserId),to: objectId(userId),type: "follow",})
+
+                       if(NotificationExist) return  res.status(200).json({ follow: true })
+
+                        db.get().collection(NOTIFICATIONS_COLLECTION).insertOne(
+                            {
+                                from: objectId(currentuserId),
+                                to: objectId(userId),
+                                type: "follow",
+                                date: moment().format(),
+                                read: false
+                            }
+                        ).then(()=>{
+
+                            res.status(200).json({ follow: true })
+                        })
+
 
                     }).catch((error) => {
 

@@ -1,4 +1,4 @@
-const { POST_COLLECTION, USER_COLLECTION,COMMENT_COLLECTION ,REPORTS_COLLECTION} = require("../config/collections")
+const { POST_COLLECTION, USER_COLLECTION, COMMENT_COLLECTION, REPORTS_COLLECTION, NOTIFICATIONS_COLLECTION } = require("../config/collections")
 const db = require('../config/connection')
 const moment = require('moment')
 const objectId = require('mongodb').ObjectID
@@ -67,8 +67,8 @@ module.exports = {
                 {
                     $unwind: "$user",
                 },
-                
-                
+
+
 
                 { $sort: { postedDate: -1 } }
 
@@ -138,17 +138,34 @@ module.exports = {
 
     DoPostLike: async (req, res) => {
         const { postId, userId } = req.body
-        console.log(postId, userId);
 
         try {
             let post = await db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) })
             let LikeExist = post?.likes.findIndex((like) => like == userId)
             if (LikeExist === -1) {
                 db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { likes: objectId(userId) } }).then(() => {
-                    db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) }).then((post) => {
-                        let likes = post.likes
 
-                        res.status(200).json({ message: "liked", likes: likes.length, liked: true })
+                    if(userId===post.userId){
+
+                        res.status(200).json({ message: "Un Liked", likes: likes.length, liked: false })
+
+                    }
+
+                    db.get().collection(NOTIFICATIONS_COLLECTION).insertOne(
+                        {
+                            from: objectId(userId),
+                            to: objectId(post.userId),
+                            type: "like",
+                            postId: objectId(post._id),
+                            date: moment().format(),
+                            read: false
+                        }
+                    ).then((result) => {
+
+                        db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) }).then((post) => {
+                            let likes = post.likes
+                            res.status(200).json({ message: "liked", likes: likes.length, liked: true,NotificationId:result.insertedId })
+                        })
                     })
 
 
@@ -229,15 +246,15 @@ module.exports = {
             console.log(post);
             if (post.userId == userId) {
                 console.log("if");
-              db.get().collection(POST_COLLECTION).deleteOne({_id:objectId(postId)}).then((result)=>{
+                db.get().collection(POST_COLLECTION).deleteOne({ _id: objectId(postId) }).then((result) => {
 
-                res.status(200).json({message:"post is  successfully deleted"})
+                    res.status(200).json({ message: "post is  successfully deleted" })
 
-              })
+                })
             } else {
                 console.log("else");
-               
-                res.status(401).json({message:"you are not owner of the post so you cant delete the post"})
+
+                res.status(401).json({ message: "you are not owner of the post so you cant delete the post" })
 
             }
         } catch (error) {
@@ -256,19 +273,19 @@ module.exports = {
     },
 
     DoComment: async (req, res) => {
-        const { postId, userId ,comment } = req.body
+        const { postId, userId, comment } = req.body
 
-        if(comment.trim()=="") return res.status(204).json({message:"Comment Is Empty"})
-       
+        if (comment.trim() == "") return res.status(204).json({ message: "Comment Is Empty" })
+
 
         try {
-            db.get().collection(COMMENT_COLLECTION).insertOne({postId,userId:objectId(userId),comment,date:moment().format()}).then((result)=>{
-                db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)},{$push:{comments:result.insertedId}}).then( async()=>{
-                 let newcomment= await db.get().collection(COMMENT_COLLECTION).aggregate([
+            db.get().collection(COMMENT_COLLECTION).insertOne({ postId, userId: objectId(userId), comment, date: moment().format() }).then((result) => {
+                db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { comments: result.insertedId } }).then(async () => {
+                    let newcomment = await db.get().collection(COMMENT_COLLECTION).aggregate([
                         {
-                            $match:{_id:objectId(result.insertedId)}
+                            $match: { _id: objectId(result.insertedId) }
                         },
-                         {
+                        {
                             $lookup: {
                                 from: USER_COLLECTION,
                                 localField: "userId",
@@ -277,33 +294,33 @@ module.exports = {
                             },
                         },
                         {
-                            $unwind:"$user"
+                            $unwind: "$user"
                         },
                         {
-                            $project:{
-                                _id:1,
-                                comment:1,
-                                postId:1,
-                                date:1,
-                                user:{
-                                    name:1,
-                                    ProfilePhotos:{ $last: "$user.ProfilePhotos" }
+                            $project: {
+                                _id: 1,
+                                comment: 1,
+                                postId: 1,
+                                date: 1,
+                                user: {
+                                    name: 1,
+                                    ProfilePhotos: { $last: "$user.ProfilePhotos" }
                                 }
 
                             }
 
                         },
-                       
+
 
                     ]).toArray()
-                        console.log(newcomment);
-                    res.status(200).json({message :"comment added",comment:newcomment})
+                    console.log(newcomment);
+                    res.status(200).json({ message: "comment added", comment: newcomment })
                 })
-            
+
             })
-            
-            
-                
+
+
+
         } catch (error) {
             console.log(error);
 
@@ -320,36 +337,36 @@ module.exports = {
     },
 
     DoReport: async (req, res) => {
-        const { userId, postId,optoion,message } = req.body
+        const { userId, postId, optoion, message } = req.body
 
-        if(message.trim()=="") return res.status(204).json({message:"Message Is Empty"})
-       
+        if (message.trim() == "") return res.status(204).json({ message: "Message Is Empty" })
+
 
         try {
-            db.get().collection(REPORTS_COLLECTION).insertOne({postId:objectId(postId),userId:objectId(userId),message,date:moment().format(),optoion}).then(async(result)=>{
-              let post=  await db.get().collection(POST_COLLECTION).findOne({_id:objectId(postId)})
-              let noOfReport=post?.report
-              if(noOfReport>=9){
+            db.get().collection(REPORTS_COLLECTION).insertOne({ postId: objectId(postId), userId: objectId(userId), message, date: moment().format(), optoion }).then(async (result) => {
+                let post = await db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) })
+                let noOfReport = post?.report
+                if (noOfReport >= 9) {
 
-                  db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)}, {$set:{status:"Block"}, $inc: { report: 1}} ).then( ()=>{
+                    db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $set: { status: "Block" }, $inc: { report: 1 } }).then(() => {
 
-                      res.status(200).json({message:" Post Reported ",})
-                  })
+                        res.status(200).json({ message: " Post Reported ", })
+                    })
 
-              }else{
-                db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)},{ $inc: { report: 1}} ).then( ()=>{
+                } else {
+                    db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $inc: { report: 1 } }).then(() => {
 
-                    res.status(200).json({message :" Post Reported ",})
-                })
+                        res.status(200).json({ message: " Post Reported ", })
+                    })
 
-              }
-   
-                  
-            
+                }
+
+
+
             })
-            
-            
-                
+
+
+
         } catch (error) {
             console.log(error);
 

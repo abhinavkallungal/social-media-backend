@@ -1,14 +1,18 @@
 const db = require('../config/connection')
 const {ONLINE_USERS_COLLECTION} =require('../config/collections')
+const { ObjectId } = require('mongodb')
 
 module.exports={
-    addOnlineUser:({soketId,userId})=>{
+    addOnlineUser:({socketId,userId})=>{
+        console.log("add online user");
         return new Promise(async(resolve,reject)=>{
-            let user =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:userId})
-            if(user){
-                db.get().collection(ONLINE_USERS_COLLECTION).updateOne({userId:userId},{
+            let userexist =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(userId)})
+            console.log("sc9",userexist);
+            if(userexist){
+                console.log("if");
+                db.get().collection(ONLINE_USERS_COLLECTION).updateOne({userId:ObjectId(userId)},{
                     $set:{
-                        soketId:soketId
+                        socketId:socketId
                     }
                 }).then(()=>{
                 
@@ -17,8 +21,9 @@ module.exports={
                 })
 
             }else{
+                console.log("else");
                 
-                db.get().collection(ONLINE_USERS_COLLECTION).insertOne({soketId,userId}).then(()=>{
+                db.get().collection(ONLINE_USERS_COLLECTION).insertOne({socketId,userId:ObjectId(userId)}).then(()=>{
                 
                 }).catch(()=>{
                     
@@ -29,13 +34,13 @@ module.exports={
             
         })
     },
-    removeOnlineuser:({soketId})=>{
-        console.log(soketId);
+    removeOnlineuser:({socketId})=>{
+        console.log("sc35 disconnected",socketId);
         return new Promise(async(resolve,reject)=>{
-            let user =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({soketId:soketId})
-            console.log(user);
-            if(user){
-                db.get().collection(ONLINE_USERS_COLLECTION).deleteOne({soketId:soketId}).then(()=>{
+            let userexist =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({socketId:socketId})
+            console.log("sock control 38",userexist);
+            if(userexist){
+                db.get().collection(ONLINE_USERS_COLLECTION).deleteOne({socketId:socketId}).then(()=>{
                 
                 }).catch(()=>{
                     
