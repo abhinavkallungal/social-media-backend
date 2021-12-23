@@ -1,6 +1,6 @@
-const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION ,NOTIFICATIONS_COLLECTION} = require("../config/collections")
+const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION, NOTIFICATIONS_COLLECTION, TOKEN_COLLECTION } = require("../config/collections")
 const db = require('../config/connection')
-const { sendEmailOtp } = require('../controllers/emailControllers')
+const { sendEmailOtp, sendPasswordResetLink } = require('../controllers/emailControllers')
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const bcrypt = require('bcrypt')
@@ -10,12 +10,14 @@ const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN
 const TWILIO_SERVICE_ID = process.env.TWILIO_SERVICE_ID
 const twilioClient = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 const objectId = require('mongodb').ObjectID
+const crypto = require("crypto")
+const { existsSync } = require("fs")
 
 
 module.exports = {
 
     test: (req, res) => {
-    
+
         res.json({ message: "test request" })
 
     },
@@ -65,7 +67,9 @@ module.exports = {
         try {
 
             if (email !== undefined && phone === undefined) {
+                console.log(email);
                 let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+                console.log(emailExist);
                 if (emailExist !== null && emailExist.emailVerified === true) return res.status(400).json({ message: "Email already exist" })
                 const hashpassword = await bcrypt.hash(password, 10)
                 if (emailExist !== null && emailExist.emailVerified === false) {
@@ -137,7 +141,7 @@ module.exports = {
 
     },
 
-    
+
     login: async (req, res) => {
 
         const { email, password, username, phone } = req.body
@@ -153,44 +157,18 @@ module.exports = {
             if (phone) { user = await db.get().collection(USER_COLLECTION).findOne({ phone: phone }) }
 
             if (user === null) return res.status(400).json({ message: "invalid username" })
-            console.log(3);
+
             let isPasswordCorrect = await bcrypt.compare(password, user.password)
-            console.log(4);
+
             if (!isPasswordCorrect) return res.status(400).json({ message: "invalid Password" })
-            console.log(5);
 
             if (!user.isActive) return res.status(400).json({ message: "This Account was Blocked" })
-            console.log(6);
 
             if (email) {
 
                 if (!user.emailVerified) {
 
-                    try {
-                        const value = Math.floor(Math.random() * Math.pow(10, 6))
-
-                        let unix = new moment().valueOf();
-
-                        await db.get().collection(OTP_COLLECTION).deleteMany({ email: email })
-
-                        await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
-
-
-                        await db.get().collection(OTP_COLLECTION).insertOne({ value, email, createdAt: new Date() })
-
-                        let status = sendEmailOtp(email, value)
-
-                        res.status(200).json({ user, message: "email Otp send", status })
-
-
-
-                    } catch (error) {
-
-                        res.status(500).json({ error: error.message });
-
-                    }
-
-
+                    res.status(401).json({ message: "Email not Exist" })
 
                 } else {
 
@@ -206,26 +184,10 @@ module.exports = {
             if (phone) {
 
                 if (!user.phoneVerified) {
-                    try {
-                        twilioClient.verify
-                            .services(TWILIO_SERVICE_ID)
-                            .verifications.create({
-                                to: `+91${phone}`,
-                                channel: "sms"
-                            }).then((response) => {
-                                res.status(200).json({ status: 'send' })
-                            })
 
-                    } catch (error) {
-
-                        res.status(500).json({ error: error.message });
-
-
-                    }
-
+                    res.status(401).json({ message: "Email not Exist" })
 
                 } else {
-                    console.log(8);
 
 
                     let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
@@ -245,57 +207,8 @@ module.exports = {
                     return res.status(200).json({ user, token })
 
 
-                } else if (user.email) {
-
-                    try {
-
-                        email = user.email
-
-                        const value = Math.floor(Math.random() * Math.pow(10, 6))
-
-                        let unix = new moment().valueOf();
-
-                        await db.get().collection(OTP_COLLECTION).deleteMany({ email: email })
-
-                        await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
-
-
-                        await db.get().collection(OTP_COLLECTION).insertOne({ value, email, createdAt: new Date() })
-
-                        let status = sendEmailOtp(email, value)
-
-                        res.status(200).json({ user, message: "otp send", status })
-
-                    } catch (error) {
-
-                        res.status(500).json({ error: error.message });
-
-                    }
-
-
-
-                } else if (user.phone) {
-
-                    try {
-                        twilioClient.verify
-                            .services(TWILIO_SERVICE_ID)
-                            .verifications.create({
-                                to: `+91${phone}`,
-                                channel: "sms"
-                            }).then((response) => {
-                                res.status(200).json({ status: 'send' })
-                            })
-
-                    } catch (error) {
-
-                        res.status(500).json({ error: error.message });
-
-
-                    }
-
                 } else {
-
-                    res.status(500).json({ error: "server error" });
+                    res.status(401).json({ message: "Email not Exist" })
 
                 }
 
@@ -306,47 +219,14 @@ module.exports = {
 
 
 
-            if (!user.emailVerified) {
-                console.log(7);
-
-
-                const value = Math.floor(Math.random() * Math.pow(10, 6))
-
-                let unix = new moment().valueOf();
-
-                await db.get().collection(OTP_COLLECTION).deleteMany({ email: email })
-
-                await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
-
-
-                await db.get().collection(OTP_COLLECTION).insertOne({ value, email, createdAt: new Date() })
-
-                let status = sendEmailOtp(email, value)
-
-                res.status(200).json({ user, message: "email send", status })
-
-
-            } else {
-                console.log(8);
-
-
-                let token = await jwt.sign({ email: user.email, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
-
-                return res.status(200).json({ user, token })
-
-            }
-
-
         } catch (err) {
-            console.log(9);
-
 
             res.status(500).json({ err: err.message })
 
         }
     },
 
-    
+
 
     sendEmailOtp: async (req, res) => {
 
@@ -355,7 +235,6 @@ module.exports = {
         try {
 
             let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
-            console.log(emailExist);
 
             if (emailExist !== null) return res.status(400).json({ message: "Email id already exist" })
 
@@ -512,6 +391,128 @@ module.exports = {
 
         }
     },
+
+    forgotPassword: async (req, res) => {
+        const { email, username, phone } = req.body
+        const clientURL = 'http://localhost:3000'
+
+        if (email !== undefined) {
+            const user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+
+            if (user === null || user.emailVerified === false) return res.status(401).json({ message: "invalid credentials "  })
+
+            let resetToken = crypto.randomBytes(32).toString("hex");
+
+            const hash = await bcrypt.hash(resetToken, 12);
+
+            await db.get().collection(TOKEN_COLLECTION).insertOne({ userId: user._id, token: hash, createdAt: Date.now() })
+
+            const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
+
+
+            let status = sendPasswordResetLink({ emailto: user.email, link, name: user.name })
+
+
+            res.status(200).json({ message: " Link send in to Your email ", status, sendTo: email })
+
+
+        }else if (username !== undefined) {
+            const user = await db.get().collection(USER_COLLECTION).findOne({ username: username })
+
+            if (user === null || user.emailVerified !== true) return res.status(401).json({ message: "invalid credentials " })
+
+            let resetToken = crypto.randomBytes(32).toString("hex");
+
+            const hash = await bcrypt.hash(resetToken, 12);
+
+            await db.get().collection(TOKEN_COLLECTION).insertOne({ userId: user._id, token: hash, createdAt: Date.now() })
+
+            const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
+
+
+            let status = sendPasswordResetLink({ emailto: user.email, link, name: user.name })
+
+
+            res.status(200).json({ message: " Link send in to Your email ", status, sendTo: email })
+
+
+        } 
+        
+        
+        else {
+            res.status(500).json({ message: "server Error" })
+        }
+
+    },
+
+    forgotPasswordReset: async (req, res) => {
+        const { password, ConfirmPassword, userId, Token } = req.body
+        console.log(req.body);
+        try {
+
+        if (password === undefined || ConfirmPassword === undefined || userId === undefined || Token === undefined) return res.status(400).json({ message: "invalid data" })
+
+        if (password !== ConfirmPassword) return res.status(400).json({ message: "Passwords are Not Match" })
+
+        TokenExist = await db.get().collection(TOKEN_COLLECTION).findOne({ userId: objectId(userId) })
+
+        if (!TokenExist) return res.status(400).json({ message: "Invalid Token" })
+
+        let isTokenCorrect = await bcrypt.compare(Token, TokenExist.token)
+
+        if(!isTokenCorrect) return res.status(400).json({ message: "Invalid Token" })
+
+
+
+        if (password !== undefined) {
+
+            const hashpassword = await bcrypt.hash(password, 10)
+
+
+           await  db.get().collection(USER_COLLECTION).updateOne({_id:objectId(userId)},{$set :{password:hashpassword}})
+
+
+           await db.get().collection(TOKEN_COLLECTION).deleteOne({userId:objectId(userId)})
+
+
+           res.status(200).json({ message: " Password Updated" })
+
+
+        } else {
+            console.log("dfaaaaaaa");
+            res.status(500).json({ message: "server Error" })
+        }
+        
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "server Error" })
+        
+        }
+
+        
+    },
+
+    googleLoginVeryfication: async (req, res) => {
+        const { email } = req.body
+        console.log(">>>>>", email);
+
+        const user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+        console.log(">>>>>>>>", user);
+        if (user) {
+
+            let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
+
+            return res.status(200).json({ user, token })
+        } else {
+            return res.status(401).json({ message: "user Can't Exist" })
+        }
+
+
+
+    },
+
+
     getProfileDetails: async (req, res) => {
         console.log(1);
         const { userId } = req.body
@@ -630,15 +631,15 @@ module.exports = {
 
             ]).toArray()
 
-           let users= searchresult.filter((item)=>{
-              
-                if(userId !== item._id+""){
-                  
+            let users = searchresult.filter((item) => {
+
+                if (userId !== item._id + "") {
+
                     return item;
                 }
             });
 
-            
+
             res.status(200).json(users)
 
         } catch (error) {
@@ -666,11 +667,11 @@ module.exports = {
 
                 db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $push: { followings: objectId(userId) } }).then((data) => {
 
-                    db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $push: { followers: objectId(currentuserId) } }).then(async() => {
+                    db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $push: { followers: objectId(currentuserId) } }).then(async () => {
 
-                       let  NotificationExist=await db.get().collection(NOTIFICATIONS_COLLECTION).findOne({from: objectId(currentuserId),to: objectId(userId),type: "follow",})
+                        let NotificationExist = await db.get().collection(NOTIFICATIONS_COLLECTION).findOne({ from: objectId(currentuserId), to: objectId(userId), type: "follow", })
 
-                       if(NotificationExist) return  res.status(200).json({ follow: true })
+                        if (NotificationExist) return res.status(200).json({ follow: true })
 
                         db.get().collection(NOTIFICATIONS_COLLECTION).insertOne(
                             {
@@ -680,7 +681,7 @@ module.exports = {
                                 date: moment().format(),
                                 read: false
                             }
-                        ).then(()=>{
+                        ).then(() => {
 
                             res.status(200).json({ follow: true })
                         })
@@ -732,18 +733,18 @@ module.exports = {
 
     },
 
-    addProfilePhoto:(req,res)=>{
+    addProfilePhoto: (req, res) => {
         console.log(req.body);
-        const {profilePhoto,currentuserId}=req.body
+        const { profilePhoto, currentuserId } = req.body
 
         try {
-            
+
             db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $push: { ProfilePhotos: profilePhoto } }).then((data) => {
                 console.log(data);
 
-                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user)=>{
+                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user) => {
 
-                    res.status(200).json({user, message:"profile photo updated"})
+                    res.status(200).json({ user, message: "profile photo updated" })
 
                 })
 
@@ -754,22 +755,22 @@ module.exports = {
 
             res.status(500).json({ message: error.message })
 
-            
+
         }
 
     },
-    addCoverPhoto:(req,res)=>{
+    addCoverPhoto: (req, res) => {
         console.log(req.body);
-        const {coverPhoto,currentuserId}=req.body
+        const { coverPhoto, currentuserId } = req.body
 
         try {
-            
-            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $set: { coverPhoto: coverPhoto } },{ upsert: true }  ).then((data) => {
+
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $set: { coverPhoto: coverPhoto } }, { upsert: true }).then((data) => {
                 console.log(data);
 
-                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user)=>{
+                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user) => {
 
-                    res.status(200).json({user, message:"cover photo updated"})
+                    res.status(200).json({ user, message: "cover photo updated" })
 
                 })
 
@@ -780,7 +781,7 @@ module.exports = {
 
             res.status(500).json({ message: error.message })
 
-            
+
         }
 
     },

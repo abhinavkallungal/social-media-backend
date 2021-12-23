@@ -63,6 +63,58 @@ module.exports.sendEmailOtp=(emailto,otp)=>{
 }
 
 
+module.exports.sendPasswordResetLink=({emailto,link,name})=>{
+
+
+    
+
+    try{
+        console.log("Email", 2,emailto,link,name);
+
+
+        let mailOptions = {
+            from: 'oneskyine@gmail.com', 
+            to: emailto, 
+            subject: 'Reset Password',
+            text: `Hello ${name},
+            
+            
+            Don't worry, we got you!
+
+            Click the link below to reset your password.  
+            
+            
+            ${link}`
+        };
+        console.log("Email", 3);
+
+        
+        
+        transporter.sendMail(mailOptions, (err, data) => {
+            console.log("Email", 4);
+
+            console.log(err,data);
+            if (err) {
+                console.log("Email", 5);
+
+                return 'Error occurs'+err
+            }
+            console.log("Email", 6);
+
+            return console.log( 'Email sent!!!')
+        });
+
+
+    }
+    catch(err){
+        console.log("Email err", 7, err);
+
+        return err
+    }
+
+}
+
+
 
 
 

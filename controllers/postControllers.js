@@ -4,6 +4,10 @@ const moment = require('moment')
 const objectId = require('mongodb').ObjectID
 const userHandlers = require("../socket/userHandlers")
 const { test } = require('../socket/socket')
+const multer = require('multer')
+const upload = multer({ dest: 'uploads/' })
+const { uploadFile } = require('./awsS3Controllers')
+
 
 
 
@@ -12,11 +16,14 @@ const { test } = require('../socket/socket')
 module.exports = {
 
     addPost: async (req, res) => {
+        let result
+        let files = []
+        console.log("call");
 
-        const { desc, files, save, Accessibility, userId } = req.body
+        const { desc, save, Accessibility, userId } = req.body
 
+        const  savePost = () => {
 
-        try {
 
             db.get().collection(POST_COLLECTION).insertOne({
                 desc,
@@ -41,12 +48,40 @@ module.exports = {
             })
 
 
-        } catch (err) {
-            console.log(err);
-
-            res.status(500).json({ err: err.message })
 
         }
+        console.log(req.files.length);
+
+        if(req.files.length > 0){
+            req.files.map(async (file) => {
+                result = await uploadFile(file)
+                files.push(result.Location)
+    
+    
+                if (req.files.length === files.length) {
+    
+                    savePost()
+    
+    
+                }
+            })
+
+            
+        }else{
+            
+            savePost()
+           
+
+        }
+
+
+      
+
+
+
+
+
+
 
     },
     getAllPosts: async (req, res) => {
@@ -76,6 +111,70 @@ module.exports = {
 
 
             ]).toArray()
+
+            res.status(200).json({ message: "post added", posts })
+
+        } catch (err) {
+
+            res.status(500).json({ err: err.message })
+
+
+        }
+
+    },
+    getFeedPosts: async (req, res) => {
+        let { userId } = req.body
+        console.log(">>>>>>>>>>>", req.body);
+
+        try {
+            let posts = await db.get().collection(USER_COLLECTION).aggregate([
+
+                {
+                    $match: { _id: objectId(userId) },
+                },
+                {
+                    $unwind: "$followings"
+                },
+                {
+                    $project: {
+                        "followings": 1,
+                    }
+
+                },
+                {
+                    $lookup: {
+                        from: POST_COLLECTION,
+                        localField: "followings",
+                        foreignField: "userId",
+                        as: "post",
+                    },
+                },
+                {
+                    $unwind: "$post"
+                },
+                {
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        localField: "followings",
+                        foreignField: "_id",
+                        as: "post.user",
+                    },
+                },
+                {
+                    $unwind: "$post.$user"
+                }
+
+
+
+
+
+
+
+
+
+
+            ]).toArray()
+            console.log(posts);
 
             res.status(200).json({ message: "post added", posts })
 
@@ -145,7 +244,7 @@ module.exports = {
             if (LikeExist === -1) {
                 db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { likes: objectId(userId) } }).then(() => {
 
-                    if(userId===post.userId){
+                    if (userId === post.userId) {
 
                         res.status(200).json({ message: "Un Liked", likes: likes.length, liked: false })
 
@@ -164,7 +263,7 @@ module.exports = {
 
                         db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) }).then((post) => {
                             let likes = post.likes
-                            res.status(200).json({ message: "liked", likes: likes.length, liked: true,NotificationId:result.insertedId })
+                            res.status(200).json({ message: "liked", likes: likes.length, liked: true, NotificationId: result.insertedId })
                         })
                     })
 

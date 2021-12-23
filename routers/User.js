@@ -1,11 +1,25 @@
 const express =require('express')
 
-const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,Dofollow,addProfilePhoto,
+const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,googleLoginVeryfication,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport} =require('../controllers/postControllers')
+const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
+const multer  = require('multer')
+const upload = multer({ dest: 'uploads/' })
+
+
+
+
+
+module.exports = {
+     upload : multer({ dest: 'uploads/' })
+
+
+  
+
+}
 
 
 const router=express.Router()
@@ -23,7 +37,13 @@ router.post("/sendEmailOtp",sendEmailOtp)
 router.post('/verifyEmailOtp',varifyEmailOtp)
 router.post("/sendMobileOtp",sendMobileOtp)
 router.post("/verifyMobileOtp",verifyMobileOtp)
-router.post("/addpost",verifyLogin,addPost)
+router.post('/googleLogin',googleLoginVeryfication)
+router.post('/forgotPasswordRequest',forgotPassword)
+router.post('/forgotPasswordReset',forgotPasswordReset)
+
+
+
+router.post("/addpost",verifyLogin,upload.array('files', 12),addPost)
 router.get("/getAllPost",verifyLogin,getAllPosts)
 router.patch("/editPost",editPost)
 router.delete("/deletePost,",deletePost)

@@ -6,5 +6,6 @@ module.exports={
     ONLINE_USERS_COLLECTION:"onlineUsers",
     COMMENT_COLLECTION:'comments',
     REPORTS_COLLECTION:'reports',
-    NOTIFICATIONS_COLLECTION:'notifications'
+    NOTIFICATIONS_COLLECTION:'notifications',
+    TOKEN_COLLECTION:'token'
 }
