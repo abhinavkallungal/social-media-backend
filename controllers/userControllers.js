@@ -399,7 +399,7 @@ module.exports = {
         if (email !== undefined) {
             const user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
 
-            if (user === null || user.emailVerified === false) return res.status(401).json({ message: "invalid credentials "  })
+            if (user === null || user.emailVerified === false) return res.status(401).json({ message: "invalid credentials " })
 
             let resetToken = crypto.randomBytes(32).toString("hex");
 
@@ -416,7 +416,7 @@ module.exports = {
             res.status(200).json({ message: " Link send in to Your email ", status, sendTo: email })
 
 
-        }else if (username !== undefined) {
+        } else if (username !== undefined) {
             const user = await db.get().collection(USER_COLLECTION).findOne({ username: username })
 
             if (user === null || user.emailVerified !== true) return res.status(401).json({ message: "invalid credentials " })
@@ -436,9 +436,9 @@ module.exports = {
             res.status(200).json({ message: " Link send in to Your email ", status, sendTo: email })
 
 
-        } 
-        
-        
+        }
+
+
         else {
             res.status(500).json({ message: "server Error" })
         }
@@ -450,54 +450,54 @@ module.exports = {
         console.log(req.body);
         try {
 
-        if (password === undefined || ConfirmPassword === undefined || userId === undefined || Token === undefined) return res.status(400).json({ message: "invalid data" })
+            if (password === undefined || ConfirmPassword === undefined || userId === undefined || Token === undefined) return res.status(400).json({ message: "invalid data" })
 
-        if (password !== ConfirmPassword) return res.status(400).json({ message: "Passwords are Not Match" })
+            if (password !== ConfirmPassword) return res.status(400).json({ message: "Passwords are Not Match" })
 
-        TokenExist = await db.get().collection(TOKEN_COLLECTION).findOne({ userId: objectId(userId) })
+            TokenExist = await db.get().collection(TOKEN_COLLECTION).findOne({ userId: objectId(userId) })
 
-        if (!TokenExist) return res.status(400).json({ message: "Invalid Token" })
+            if (!TokenExist) return res.status(400).json({ message: "Invalid Token" })
 
-        let isTokenCorrect = await bcrypt.compare(Token, TokenExist.token)
+            let isTokenCorrect = await bcrypt.compare(Token, TokenExist.token)
 
-        if(!isTokenCorrect) return res.status(400).json({ message: "Invalid Token" })
-
-
-
-        if (password !== undefined) {
-
-            const hashpassword = await bcrypt.hash(password, 10)
+            if (!isTokenCorrect) return res.status(400).json({ message: "Invalid Token" })
 
 
-           await  db.get().collection(USER_COLLECTION).updateOne({_id:objectId(userId)},{$set :{password:hashpassword}})
+
+            if (password !== undefined) {
+
+                const hashpassword = await bcrypt.hash(password, 10)
 
 
-           await db.get().collection(TOKEN_COLLECTION).deleteOne({userId:objectId(userId)})
+                await db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $set: { password: hashpassword } })
 
 
-           res.status(200).json({ message: " Password Updated" })
+                await db.get().collection(TOKEN_COLLECTION).deleteOne({ userId: objectId(userId) })
 
 
-        } else {
-            console.log("dfaaaaaaa");
+                res.status(200).json({ message: " Password Updated" })
+
+
+            } else {
+                console.log("dfaaaaaaa");
+                res.status(500).json({ message: "server Error" })
+            }
+
+
+        } catch (error) {
+            console.log(error);
             res.status(500).json({ message: "server Error" })
-        }
-        
-        
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: "server Error" })
-        
+
         }
 
-        
+
     },
 
     googleLoginVeryfication: async (req, res) => {
         const { email } = req.body
         console.log(">>>>>", email);
 
-        const user = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+        const user = await db.get().collection(USER_COLLECTION).findOne({ email })
         console.log(">>>>>>>>", user);
         if (user) {
 
@@ -541,6 +541,30 @@ module.exports = {
                 },
                 {
                     $unwind: "$user",
+                },
+                {
+
+                    $project:{
+                        _id:1,
+                        desc:1,
+                        files:1,
+                        location:1,
+                        tag:1,
+                        Accessibility:1,
+                        likes:1,
+                        comments:1,
+                        status:1,
+                        report:1,
+                        postedDate:1,
+                        userId:1,
+                        user: {
+                            _id:1,
+                            name: 1,
+                            ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                        }
+                        
+                    }
+
                 },
                 { $sort: { postedDate: -1 } }
 
@@ -613,9 +637,32 @@ module.exports = {
             let searchresult = await db.get().collection(USER_COLLECTION).aggregate([
 
                 {
-                    $match: { name: { $regex: `${keyword}`, $options: 'i' }, username: { $regex: `${keyword}`, $options: 'i' } }
-                },
+                    $match: {
+                        $and: [{
+                            $or: [{
+                                name: { $regex: `${keyword}`, $options: 'i' },
+                            }, {
 
+                                username: { $regex: `${keyword}`, $options: 'i' },
+                            }
+                            ]
+                        }, {
+
+                            $or: [{
+                                phoneVerified: true
+                            }, {
+
+                                emailVerified: true
+                            }
+                            ]
+                        }
+
+
+                        ]
+
+
+                    }
+                },
                 {
                     $addFields: {
                         following: {

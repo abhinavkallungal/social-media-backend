@@ -14,13 +14,84 @@ const { uploadFile } = require('./awsS3Controllers')
 
 
 module.exports = {
+    getFriendsForTag:async(req,res)=>{
+        const {userId} =req.body
+        console.log("userId",req.body);
+
+        try {
+            if(userId===undefined ||userId===null) return res.status(204).json({message:"insufficient content "})
+
+            let friends = await db.get().collection(USER_COLLECTION).aggregate([
+                {
+                    $match :{_id:objectId(userId)}
+                },
+                {
+                    $project :{
+                        common:{ $setIntersection: [ "$followings","$followers" ]}
+    
+                    }
+                },
+                {
+                    $unwind : "$common"
+                },
+                {
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        localField: "common",
+                        foreignField: "_id",
+                        as: "user",
+                    },
+                },
+                {
+                    $unwind: "$user"
+                },
+                {
+                    $project: {
+                        _id:0,
+                        user: {
+                            _id:1,
+                            name: 1,
+                        }
+    
+                    }
+    
+                },
+    
+               
+    
+            ]).toArray()
+    
+            console.log(friends);
+
+            res.status(200).json({friends,message:"sussess"})
+            
+        } catch (error) {
+
+            res.status(500).json({ message: error.message })
+
+            
+        }
+
+       
+
+
+
+
+
+    },
 
     addPost: async (req, res) => {
         let result
         let files = []
-        console.log("call");
+        console.log("call",req.body);
 
-        const { desc, save, Accessibility, userId } = req.body
+        let { desc, save, Accessibility, userId,location,tag } = req.body
+
+        if(tag===undefined){
+            tag=new Array(  )
+        }else{
+            tag=JSON.parse(tag)
+        }
 
         const  savePost = () => {
 
@@ -28,7 +99,8 @@ module.exports = {
             db.get().collection(POST_COLLECTION).insertOne({
                 desc,
                 files,
-                save,
+                location,
+                tag,
                 Accessibility,
                 likes: new Array(),
                 comments: new Array(),
@@ -102,8 +174,8 @@ module.exports = {
                 {
                     $unwind: "$user",
                 },
-
-
+                
+    
 
                 { $sort: { postedDate: -1 } }
 
@@ -150,31 +222,71 @@ module.exports = {
                     },
                 },
                 {
-                    $unwind: "$post"
+                    $unwind:"$post"
+
                 },
+                {
+
+                    $project:{
+                        _id:'$post._id',
+                        desc:'$post.desc',
+                        files:'$post.files',
+                        location:'$post.location',
+                        tag:'$post.tag',
+                        Accessibility:'$post.Accessibility:',
+                        likes:'$post.likes',
+                        comments:'$post.comments',
+                        status:'$post.status',
+                        report:'$post.report',
+                        postedDate:'$post.postedDate',
+                        userId:'$post.userId',
+                       
+                        
+                    }
+
+                },
+
                 {
                     $lookup: {
                         from: USER_COLLECTION,
-                        localField: "followings",
+                        localField: "userId",
                         foreignField: "_id",
-                        as: "post.user",
+                        as: "user",
                     },
                 },
                 {
-                    $unwind: "$post.$user"
-                }
+                    $unwind: "$user",
+                },
+                {
 
+                    $project:{
+                        _id:1,
+                        desc:1,
+                        files:1,
+                        location:1,
+                        tag:1,
+                        Accessibility:1,
+                        likes:1,
+                        comments:1,
+                        status:1,
+                        report:1,
+                        postedDate:1,
+                        userId:1,
+                        user: {
+                            _id:1,
+                            name: 1,
+                            ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                        }
+                        
+                    }
 
-
-
-
-
-
-
-
+                },
+                { $sort: { postedDate: -1 } }
+               
+              
+            
 
             ]).toArray()
-            console.log(posts);
 
             res.status(200).json({ message: "post added", posts })
 
