@@ -1,6 +1,6 @@
 const express =require('express')
 
-const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,googleLoginVeryfication,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,
+const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,sendMobileOtp,googleLoginVeryfication,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
 const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag,getTagsDetailes,getPostComments} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
@@ -27,13 +27,13 @@ const router=express.Router()
 router.get('/',test)
 
 
-router.post('/',sendEmailOtp)
+
 //api for check username available for signup 
 router.post('/checkUserName',checkUserName)
 //api for signup 
 router.post('/signup',Signup)
 router.post("/login",login)
-router.post("/sendEmailOtp",sendEmailOtp)
+router.post("/reSendEmailOtp",reSendEmailOtp)
 router.post('/verifyEmailOtp',varifyEmailOtp)
 router.post("/sendMobileOtp",sendMobileOtp)
 router.post("/verifyMobileOtp",verifyMobileOtp)

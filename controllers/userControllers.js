@@ -32,14 +32,13 @@ module.exports = {
         try {
 
             let usernameExist = await db.get().collection(USER_COLLECTION).findOne({ username: username })
-
             if (usernameExist === null) {
 
                 res.status(200).json({ usernameExist: false, message: "username can't exist" })
 
             } else {
 
-                res.status(400).json({ usernameExist: true, message: "username can exist" })
+                res.status(200).json({ usernameExist: true, message: "username can exist" })
 
             }
         }
@@ -124,7 +123,8 @@ module.exports = {
                     }).then((response) => {
 
                         return res.status(200).json({ status: 'send' })
-                    }).catch(() => {
+                    }).catch((error) => {
+                        return res.status(400).json({ status: 'error' })
 
                     })
 
@@ -228,15 +228,16 @@ module.exports = {
 
 
 
-    sendEmailOtp: async (req, res) => {
+    reSendEmailOtp: async (req, res) => {
 
         const emailto = req.body.email
+        console.log(emailto);
 
         try {
 
-            let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
-
-            if (emailExist !== null) return res.status(400).json({ message: "Email id already exist" })
+            let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: emailto })
+            console.log(emailExist);
+            if (emailExist !== null  && emailExist?.emailVerified) return res.status(400).json({ message: "Email id already exist" })
 
 
             const value = Math.floor(Math.random() * Math.pow(10, 6))
@@ -255,7 +256,7 @@ module.exports = {
             res.status(200).json({ message: "email send", status })
 
         } catch (err) {
-
+            console.log(err);
             res.status(500).json({ err: err.message })
 
         }
@@ -265,22 +266,20 @@ module.exports = {
 
     varifyEmailOtp: async (req, res) => {
         const { email, otp } = req.body
-        console.log(email, otp);
 
         try {
-            console.log(">>>>>>>>1")
+            
 
             const value = await db.get().collection(OTP_COLLECTION).findOne({ email: email })
-            console.log(">>>>>>>>2")
+            
 
             if (value === null) return res.status(400).json({ message: "invalid otp or otp expired " })
-            console.log(">>>>>>>>3")
 
             if (value.value != otp) return res.status(400).json({ message: " otp can't match " })
-            console.log(">>>>>>>>4")
+            
 
             db.get().collection(OTP_COLLECTION).deleteOne({ _id: value._id }).then(() => {
-                console.log(">>>>>>>>5")
+                
 
                 db.get().collection(USER_COLLECTION).updateOne({ email: email }, { $set: { emailVerified: true } }).then(async () => {
 
