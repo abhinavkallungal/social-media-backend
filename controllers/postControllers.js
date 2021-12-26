@@ -7,6 +7,9 @@ const { test } = require('../socket/socket')
 const multer = require('multer')
 const upload = multer({ dest: 'uploads/' })
 const { uploadFile } = require('./awsS3Controllers')
+const { post } = require("../routers/User")
+const { response } = require("express")
+
 
 
 
@@ -71,20 +74,13 @@ module.exports = {
 
             
         }
-
-       
-
-
-
-
-
     },
 
     addPost: async (req, res) => {
         let result
         let files = []
         console.log("call",req.body);
-
+      
         let { desc, save, Accessibility, userId,location,tag } = req.body
 
         if(tag===undefined){
@@ -195,7 +191,8 @@ module.exports = {
 
     },
     getFeedPosts: async (req, res) => {
-        let { userId } = req.body
+        let { userId ,page } = req.body
+        console.log(req.body);
         console.log(">>>>>>>>>>>", req.body);
 
         try {
@@ -205,18 +202,16 @@ module.exports = {
                     $match: { _id: objectId(userId) },
                 },
                 {
-                    $unwind: "$followings"
-                },
-                {
                     $project: {
                         "followings": 1,
                     }
 
                 },
+                { $set: { followings: { $concatArrays: [ "$followings", [ objectId( userId) ] ] } } },
                 {
                     $lookup: {
                         from: POST_COLLECTION,
-                        localField: "followings",
+                        localField: "followings" ,
                         foreignField: "userId",
                         as: "post",
                     },
@@ -281,20 +276,90 @@ module.exports = {
                     }
 
                 },
-                { $sort: { postedDate: -1 } }
-               
+                { $sort: { postedDate: -1 } },
               
             
-
+                
             ]).toArray()
 
-            res.status(200).json({ message: "post added", posts })
+            console.log(posts);
+            
+
+            if(posts.length > page*10){
+
+                posts=posts.slice((page*10)-10 ,page*10);
+            }else{
+
+                posts=posts.slice((page*10)-10  ,posts.length);
+
+            }
+
+
+
+
+            res.status(200).json({ message: "get allposts", posts })
 
         } catch (err) {
 
             res.status(500).json({ err: err.message })
 
 
+        }
+
+    },
+
+    getTagsDetailes:async(req,res)=>{
+        console.log("sdasasdasd");
+        const{postId}=req.body
+
+        try {
+            
+           const tagWith= await db.get().collection(POST_COLLECTION).aggregate([
+                {
+                    $match:{_id:objectId(postId)}
+                },
+                {
+                    $unwind:"$tag"
+                },
+                {
+                    $project :{
+                        _id:0,
+                        tag:{ $toObjectId: "$tag._id" } 
+                    }
+                },
+                {
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        localField: "tag",
+                        foreignField: "_id",
+                        as: "user",
+                    },
+                }, 
+                {
+                    $unwind:"$user"
+                },
+                {
+                    $project :{
+                        
+                        _id:"$user._id",
+                        name: "$user.name",
+                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                        
+                    }
+                },
+                
+               
+            ]).toArray()
+
+            res.status(200).json({tagWith})
+
+
+            
+        } catch (error) {
+
+            res.status(500).json({ message: error.message })
+
+            
         }
 
     },
@@ -490,11 +555,11 @@ module.exports = {
 
 
         try {
-            db.get().collection(COMMENT_COLLECTION).insertOne({ postId, userId: objectId(userId), comment, date: moment().format() }).then((result) => {
+            db.get().collection(COMMENT_COLLECTION).insertOne({ postId:objectId(postId), userId: objectId(userId), comment, date: moment().format() }).then((result) => {
                 db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { comments: result.insertedId } }).then(async () => {
-                    let newcomment = await db.get().collection(COMMENT_COLLECTION).aggregate([
+                    let comments = await db.get().collection(COMMENT_COLLECTION).aggregate([
                         {
-                            $match: { _id: objectId(result.insertedId) }
+                            $match: { postId: objectId(postId) }
                         },
                         {
                             $lookup: {
@@ -521,11 +586,12 @@ module.exports = {
                             }
 
                         },
+                        { $sort: { date: -1 } },
+
 
 
                     ]).toArray()
-                    console.log(newcomment);
-                    res.status(200).json({ message: "comment added", comment: newcomment })
+                    res.status(200).json({ message: "comment added", comments: comments })
                 })
 
             })
@@ -545,6 +611,59 @@ module.exports = {
 
 
 
+    },
+
+    getPostComments:async(req,res)=>{
+        const {postId}=req.body
+        console.log(req.body);
+
+        try {
+
+            let comments  = await db.get().collection(COMMENT_COLLECTION).aggregate([
+                {
+                    $match: { postId: objectId(postId) }
+                },
+                {
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        localField: "userId",
+                        foreignField: "_id",
+                        as: "user",
+                    },
+                },
+                {
+                    $unwind: "$user"
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        comment: 1,
+                        postId: 1,
+                        date: 1,
+                        user: {
+                            name: 1,
+                            ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                        }
+
+                    }
+
+                },
+                { $sort: { date: -1 } },
+
+
+
+            ]).toArray()
+            if(comments.length === 0) return res.status(204).json({message:"No comment Found"})
+
+            res.status(200).json({message:"comments found",comments})
+
+
+            
+        } catch (error) {
+
+            res.status(500).json({message:error.message})
+            
+        }
     },
 
     DoReport: async (req, res) => {

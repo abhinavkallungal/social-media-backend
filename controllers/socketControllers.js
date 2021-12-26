@@ -6,8 +6,7 @@ module.exports={
     addOnlineUser:({socketId,userId})=>{
         console.log("add online user");
         return new Promise(async(resolve,reject)=>{
-            let userexist =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(userId)})
-            console.log("sc9",userexist);
+            let userexist = await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(userId)})
             if(userexist){
                 console.log("if");
                 db.get().collection(ONLINE_USERS_COLLECTION).updateOne({userId:ObjectId(userId)},{

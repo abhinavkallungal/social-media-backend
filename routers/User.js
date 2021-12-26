@@ -2,7 +2,7 @@ const express =require('express')
 
 const {test,Signup, login,sendEmailOtp,varifyEmailOtp,sendMobileOtp,googleLoginVeryfication,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag} =require('../controllers/postControllers')
+const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag,getTagsDetailes,getPostComments} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
@@ -58,6 +58,8 @@ router.post("/addpost",verifyLogin,upload.array('files', 12),addPost)
 router.post("/getFriendsForTag",verifyLogin,getFriendsForTag)
 
 router.post("/postLike",verifyLogin,DoPostLike)
+router.post("/getPostComments",verifyLogin,getPostComments)
+router.post("/getTagsDetailes",verifyLogin,getTagsDetailes)
 router.post("/postSave",verifyLogin,DoPostSave)
 router.post("/Deletepost",verifyLogin,DoDeletepost)
 router.post("/comment",verifyLogin,DoComment)
