@@ -145,7 +145,8 @@ module.exports = {
     login: async (req, res) => {
 
         const { email, password, username, phone } = req.body
-        console.log(req.body.username);
+        console.log(req.body);
+
 
         try {
             let user
@@ -220,6 +221,7 @@ module.exports = {
 
 
         } catch (err) {
+            console.log(err);
 
             res.status(500).json({ err: err.message })
 
@@ -275,7 +277,7 @@ module.exports = {
 
             if (value === null) return res.status(400).json({ message: "invalid otp or otp expired " })
 
-            if (value.value != otp) return res.status(400).json({ message: " otp can't match " })
+            if (value.value != otp) return res.status(400).json({ message: " invalid OTP " })
             
 
             db.get().collection(OTP_COLLECTION).deleteOne({ _id: value._id }).then(() => {
@@ -317,7 +319,7 @@ module.exports = {
     },
 
 
-    sendMobileOtp: (phone) => {
+    reSendMobileOtp: ({phone}) => {
 
 
         try {

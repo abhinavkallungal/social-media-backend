@@ -17,25 +17,25 @@ const { response } = require("express")
 
 
 module.exports = {
-    getFriendsForTag:async(req,res)=>{
-        const {userId} =req.body
-        console.log("userId",req.body);
+    getFriendsForTag: async (req, res) => {
+        const { userId } = req.body
+        console.log("userId", req.body);
 
         try {
-            if(userId===undefined ||userId===null) return res.status(204).json({message:"insufficient content "})
+            if (userId === undefined || userId === null) return res.status(204).json({ message: "insufficient content " })
 
             let friends = await db.get().collection(USER_COLLECTION).aggregate([
                 {
-                    $match :{_id:objectId(userId)}
+                    $match: { _id: objectId(userId) }
                 },
                 {
-                    $project :{
-                        common:{ $setIntersection: [ "$followings","$followers" ]}
-    
+                    $project: {
+                        common: { $setIntersection: ["$followings", "$followers"] }
+
                     }
                 },
                 {
-                    $unwind : "$common"
+                    $unwind: "$common"
                 },
                 {
                     $lookup: {
@@ -50,46 +50,46 @@ module.exports = {
                 },
                 {
                     $project: {
-                        _id:0,
+                        _id: 0,
                         user: {
-                            _id:1,
+                            _id: 1,
                             name: 1,
                         }
-    
+
                     }
-    
+
                 },
-    
-               
-    
+
+
+
             ]).toArray()
-    
+
             console.log(friends);
 
-            res.status(200).json({friends,message:"sussess"})
-            
+            res.status(200).json({ friends, message: "sussess" })
+
         } catch (error) {
 
             res.status(500).json({ message: error.message })
 
-            
+
         }
     },
 
     addPost: async (req, res) => {
         let result
         let files = []
-        console.log("call",req.body);
-      
-        let { desc, save, Accessibility, userId,location,tag } = req.body
+        console.log("call", req.body);
 
-        if(tag===undefined){
-            tag=new Array(  )
-        }else{
-            tag=JSON.parse(tag)
+        let { desc, save, Accessibility, userId, location, tag } = req.body
+
+        if (tag === undefined) {
+            tag = new Array()
+        } else {
+            tag = JSON.parse(tag)
         }
 
-        const  savePost = () => {
+        const savePost = () => {
 
 
             db.get().collection(POST_COLLECTION).insertOne({
@@ -120,30 +120,30 @@ module.exports = {
         }
         console.log(req.files.length);
 
-        if(req.files.length > 0){
+        if (req.files.length > 0) {
             req.files.map(async (file) => {
                 result = await uploadFile(file)
                 files.push(result.Location)
-    
-    
+
+
                 if (req.files.length === files.length) {
-    
+
                     savePost()
-    
-    
+
+
                 }
             })
 
-            
-        }else{
-            
+
+        } else {
+
             savePost()
-           
+
 
         }
 
 
-      
+
 
 
 
@@ -170,8 +170,8 @@ module.exports = {
                 {
                     $unwind: "$user",
                 },
-                
-    
+
+
 
                 { $sort: { postedDate: -1 } }
 
@@ -191,7 +191,7 @@ module.exports = {
 
     },
     getFeedPosts: async (req, res) => {
-        let { userId ,page } = req.body
+        let { userId, page } = req.body
         console.log(req.body);
         console.log(">>>>>>>>>>>", req.body);
 
@@ -207,36 +207,36 @@ module.exports = {
                     }
 
                 },
-                { $set: { followings: { $concatArrays: [ "$followings", [ objectId( userId) ] ] } } },
+                { $set: { followings: { $concatArrays: ["$followings", [objectId(userId)]] } } },
                 {
                     $lookup: {
                         from: POST_COLLECTION,
-                        localField: "followings" ,
+                        localField: "followings",
                         foreignField: "userId",
                         as: "post",
                     },
                 },
                 {
-                    $unwind:"$post"
+                    $unwind: "$post"
 
                 },
                 {
 
-                    $project:{
-                        _id:'$post._id',
-                        desc:'$post.desc',
-                        files:'$post.files',
-                        location:'$post.location',
-                        tag:'$post.tag',
-                        Accessibility:'$post.Accessibility:',
-                        likes:'$post.likes',
-                        comments:'$post.comments',
-                        status:'$post.status',
-                        report:'$post.report',
-                        postedDate:'$post.postedDate',
-                        userId:'$post.userId',
-                       
-                        
+                    $project: {
+                        _id: '$post._id',
+                        desc: '$post.desc',
+                        files: '$post.files',
+                        location: '$post.location',
+                        tag: '$post.tag',
+                        Accessibility: '$post.Accessibility:',
+                        likes: '$post.likes',
+                        comments: '$post.comments',
+                        status: '$post.status',
+                        report: '$post.report',
+                        postedDate: '$post.postedDate',
+                        userId: '$post.userId',
+
+
                     }
 
                 },
@@ -254,43 +254,43 @@ module.exports = {
                 },
                 {
 
-                    $project:{
-                        _id:1,
-                        desc:1,
-                        files:1,
-                        location:1,
-                        tag:1,
-                        Accessibility:1,
-                        likes:1,
-                        comments:1,
-                        status:1,
-                        report:1,
-                        postedDate:1,
-                        userId:1,
+                    $project: {
+                        _id: 1,
+                        desc: 1,
+                        files: 1,
+                        location: 1,
+                        tag: 1,
+                        Accessibility: 1,
+                        likes: 1,
+                        comments: 1,
+                        status: 1,
+                        report: 1,
+                        postedDate: 1,
+                        userId: 1,
                         user: {
-                            _id:1,
+                            _id: 1,
                             name: 1,
                             ProfilePhotos: { $last: "$user.ProfilePhotos" }
                         }
-                        
+
                     }
 
                 },
                 { $sort: { postedDate: -1 } },
-              
-            
-                
+
+
+
             ]).toArray()
 
             console.log(posts);
-            
 
-            if(posts.length > page*10){
 
-                posts=posts.slice((page*10)-10 ,page*10);
-            }else{
+            if (posts.length > page * 10) {
 
-                posts=posts.slice((page*10)-10  ,posts.length);
+                posts = posts.slice((page * 10) - 10, page * 10);
+            } else {
+
+                posts = posts.slice((page * 10) - 10, posts.length);
 
             }
 
@@ -308,23 +308,23 @@ module.exports = {
 
     },
 
-    getTagsDetailes:async(req,res)=>{
+    getTagsDetailes: async (req, res) => {
         console.log("sdasasdasd");
-        const{postId}=req.body
+        const { postId } = req.body
 
         try {
-            
-           const tagWith= await db.get().collection(POST_COLLECTION).aggregate([
+
+            const tagWith = await db.get().collection(POST_COLLECTION).aggregate([
                 {
-                    $match:{_id:objectId(postId)}
+                    $match: { _id: objectId(postId) }
                 },
                 {
-                    $unwind:"$tag"
+                    $unwind: "$tag"
                 },
                 {
-                    $project :{
-                        _id:0,
-                        tag:{ $toObjectId: "$tag._id" } 
+                    $project: {
+                        _id: 0,
+                        tag: { $toObjectId: "$tag._id" }
                     }
                 },
                 {
@@ -334,32 +334,32 @@ module.exports = {
                         foreignField: "_id",
                         as: "user",
                     },
-                }, 
-                {
-                    $unwind:"$user"
                 },
                 {
-                    $project :{
-                        
-                        _id:"$user._id",
+                    $unwind: "$user"
+                },
+                {
+                    $project: {
+
+                        _id: "$user._id",
                         name: "$user.name",
                         ProfilePhotos: { $last: "$user.ProfilePhotos" }
-                        
+
                     }
                 },
-                
-               
+
+
             ]).toArray()
 
-            res.status(200).json({tagWith})
+            res.status(200).json({ tagWith })
 
 
-            
+
         } catch (error) {
 
             res.status(500).json({ message: error.message })
 
-            
+
         }
 
     },
@@ -423,26 +423,31 @@ module.exports = {
 
                     if (userId === post.userId) {
 
-                        res.status(200).json({ message: "Un Liked", likes: likes.length, liked: false })
+                        return res.status(200).json({ message: " Liked", likes: likes.length, liked: false })
+
+                    } else {
+
+                        db.get().collection(NOTIFICATIONS_COLLECTION).insertOne(
+                            {
+                                from: objectId(userId),
+                                to: objectId(post.userId),
+                                type: "like",
+                                postId: objectId(post._id),
+                                date: moment().format(),
+                                read: false
+                            }
+                        ).then((result) => {
+
+                            db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) }).then((post) => {
+                                let likes = post.likes
+                                res.status(200).json({ message: "liked", likes: likes.length, liked: true, NotificationId: result.insertedId })
+                            })
+                        })
+
 
                     }
 
-                    db.get().collection(NOTIFICATIONS_COLLECTION).insertOne(
-                        {
-                            from: objectId(userId),
-                            to: objectId(post.userId),
-                            type: "like",
-                            postId: objectId(post._id),
-                            date: moment().format(),
-                            read: false
-                        }
-                    ).then((result) => {
 
-                        db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) }).then((post) => {
-                            let likes = post.likes
-                            res.status(200).json({ message: "liked", likes: likes.length, liked: true, NotificationId: result.insertedId })
-                        })
-                    })
 
 
                 })
@@ -550,13 +555,19 @@ module.exports = {
 
     DoComment: async (req, res) => {
         const { postId, userId, comment } = req.body
+        console.log(req.body);
 
         if (comment.trim() == "") return res.status(204).json({ message: "Comment Is Empty" })
 
 
         try {
-            db.get().collection(COMMENT_COLLECTION).insertOne({ postId:objectId(postId), userId: objectId(userId), comment, date: moment().format() }).then((result) => {
-                db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { comments: result.insertedId } }).then(async () => {
+            db.get().collection(COMMENT_COLLECTION).insertOne({ postId: objectId(postId), userId: objectId(userId), comment, date: moment().format() }).then((result) => {
+                db.get().collection(POST_COLLECTION).findOneAndUpdate({ _id: objectId(postId) }, { $push: { comments: result.insertedId } }).then(async (result) => {
+                   
+
+                    let post =result.value
+
+
                     let comments = await db.get().collection(COMMENT_COLLECTION).aggregate([
                         {
                             $match: { postId: objectId(postId) }
@@ -591,7 +602,37 @@ module.exports = {
 
 
                     ]).toArray()
-                    res.status(200).json({ message: "comment added", comments: comments })
+
+                    if (userId === post.userId) {
+                       return  res.status(200).json({ message: "comment added", comments: comments })
+
+
+                    } else {
+
+                        db.get().collection(NOTIFICATIONS_COLLECTION).insertOne(
+                            {
+                                from: objectId(userId),
+                                to: objectId(post.userId),
+                                type: "comment",
+                                postId: objectId(postId),
+                                date: moment().format(),
+                                read: false
+                            }
+                        ).then((result) => {
+
+                                return  res.status(200).json({ message: "comment added", comments: comments ,NotificationId: result.insertedId  })
+
+                            
+                        }).catch((error)=>{
+
+
+                            res.status(500).json({ message: err.message })
+
+                        })
+
+
+                    }
+
                 })
 
             })
@@ -613,13 +654,13 @@ module.exports = {
 
     },
 
-    getPostComments:async(req,res)=>{
-        const {postId}=req.body
+    getPostComments: async (req, res) => {
+        const { postId } = req.body
         console.log(req.body);
 
         try {
 
-            let comments  = await db.get().collection(COMMENT_COLLECTION).aggregate([
+            let comments = await db.get().collection(COMMENT_COLLECTION).aggregate([
                 {
                     $match: { postId: objectId(postId) }
                 },
@@ -653,16 +694,16 @@ module.exports = {
 
 
             ]).toArray()
-            if(comments.length === 0) return res.status(204).json({message:"No comment Found"})
+            if (comments.length === 0) return res.status(204).json({ message: "No comment Found" })
 
-            res.status(200).json({message:"comments found",comments})
+            res.status(200).json({ message: "comments found", comments })
 
 
-            
+
         } catch (error) {
 
-            res.status(500).json({message:error.message})
-            
+            res.status(500).json({ message: error.message })
+
         }
     },
 

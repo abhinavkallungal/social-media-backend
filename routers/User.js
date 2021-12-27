@@ -1,6 +1,6 @@
 const express =require('express')
 
-const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,sendMobileOtp,googleLoginVeryfication,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,
+const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,googleLoginVeryfication,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
 const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag,getTagsDetailes,getPostComments} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
@@ -35,7 +35,7 @@ router.post('/signup',Signup)
 router.post("/login",login)
 router.post("/reSendEmailOtp",reSendEmailOtp)
 router.post('/verifyEmailOtp',varifyEmailOtp)
-router.post("/sendMobileOtp",sendMobileOtp)
+router.post("/reSendMobileOtp",reSendMobileOtp)
 router.post("/verifyMobileOtp",verifyMobileOtp)
 router.post('/googleLogin',googleLoginVeryfication)
 router.post('/forgotPasswordRequest',forgotPassword)

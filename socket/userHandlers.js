@@ -61,6 +61,53 @@ module.exports = (io, socket) => {
 
     }
 
+    const CommentNotification=async ({NotificationId})=>{
+        let notifications= await db.get().collection(NOTIFICATIONS_COLLECTION).aggregate([
+            {
+                $match: { "_id": ObjectId(NotificationId) }
+            },
+            {
+                $lookup: {
+                    from: USER_COLLECTION,
+                    localField: "from",
+                    foreignField: "_id",
+                    as: "user",
+                },
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $project: {
+                    _id: 1,
+                    from: 1,
+                    to : 1,
+                    type:1,
+                    postId:1,
+                    read:1,
+                    date: 1,
+                    user: {
+                        name: 1,
+                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                    }
+    
+                }
+    
+            },
+    
+        ]).toArray()
+
+        console.log(">>>>>>>>",notifications[0]);
+        let OnlineUserExist=await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(notifications[0].to) })
+        console.log(">>>>>>>>",OnlineUserExist);
+
+        if(OnlineUserExist){
+            console.log("emit");
+            socket.to(OnlineUserExist.socketId).emit("sendCommentNotification",notifications[0] );
+        }
+
+    }
+
    
 
     const disconnect = (socketId) => {
@@ -103,6 +150,7 @@ module.exports = (io, socket) => {
     socket.on("login",adding);
    
     socket.on('dolike', LikeNotification)
+    socket.on('docomment', CommentNotification)
 
 }
 
