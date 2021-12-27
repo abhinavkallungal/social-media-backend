@@ -555,7 +555,6 @@ module.exports = {
 
     DoComment: async (req, res) => {
         const { postId, userId, comment } = req.body
-        console.log(req.body);
 
         if (comment.trim() == "") return res.status(204).json({ message: "Comment Is Empty" })
 

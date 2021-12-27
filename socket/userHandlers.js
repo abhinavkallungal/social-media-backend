@@ -54,9 +54,13 @@ module.exports = (io, socket) => {
         console.log(">>>>>>>>",OnlineUserExist);
 
         if(OnlineUserExist){
-    
-            socket.to(OnlineUserExist.socketId).emit("sendLikeNotification",notifications[0] );
-            console.log("send",socket.id);
+            const  unReadNotifications= await db.get().collection(NOTIFICATIONS_COLLECTION).find({$and:[
+                {to:ObjectId(notifications[0].to)},
+                {read:false}
+                ]}).toArray()    
+                socket.to(OnlineUserExist.socketId).emit("sendLikeNotification",{notifications:notifications[0] ,unReadNotificationsCount:unReadNotifications.length} );
+
+           
         }
 
     }
@@ -97,13 +101,15 @@ module.exports = (io, socket) => {
     
         ]).toArray()
 
-        console.log(">>>>>>>>",notifications[0]);
         let OnlineUserExist=await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(notifications[0].to) })
-        console.log(">>>>>>>>",OnlineUserExist);
 
         if(OnlineUserExist){
-            console.log("emit");
-            socket.to(OnlineUserExist.socketId).emit("sendCommentNotification",notifications[0] );
+          const  unReadNotifications= await db.get().collection(NOTIFICATIONS_COLLECTION).find({$and:[
+            {to:ObjectId(notifications[0].to)},
+            {read:false}
+            ]}).toArray()            
+
+            socket.to(OnlineUserExist.socketId).emit("sendCommentNotification",{notifications:notifications[0] ,unReadNotificationsCount:unReadNotifications.length} );
         }
 
     }
