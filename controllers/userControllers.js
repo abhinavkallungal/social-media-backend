@@ -166,10 +166,12 @@ module.exports = {
             if (!user.isActive) return res.status(400).json({ message: "This Account was Blocked" })
 
 
-            const  unReadNotifications= await db.get().collection(NOTIFICATIONS_COLLECTION).find({$and:[
-                {to:objectId(user._id)},
-                {read:false}
-                ]}).toArray() 
+            const unReadNotifications = await db.get().collection(NOTIFICATIONS_COLLECTION).find({
+                $and: [
+                    { to: objectId(user._id) },
+                    { read: false }
+                ]
+            }).toArray()
 
 
             let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
@@ -182,9 +184,9 @@ module.exports = {
 
                 } else {
 
-                   
 
-                    return res.status(200).json({ user, token ,unReadNotificationsCount:unReadNotifications.length })
+
+                    return res.status(200).json({ user, token, unReadNotificationsCount: unReadNotifications.length })
 
                 }
 
@@ -201,7 +203,7 @@ module.exports = {
 
                     let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
 
-                    return res.status(200).json({ user, token,unReadNotificationsCount:unReadNotifications.length  })
+                    return res.status(200).json({ user, token, unReadNotificationsCount: unReadNotifications.length })
 
                 }
 
@@ -213,7 +215,7 @@ module.exports = {
 
                     let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
 
-                    return res.status(200).json({ user, token,unReadNotificationsCount:unReadNotifications.length  })
+                    return res.status(200).json({ user, token, unReadNotificationsCount: unReadNotifications.length })
 
 
                 } else {
@@ -247,7 +249,7 @@ module.exports = {
 
             let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: emailto })
             console.log(emailExist);
-            if (emailExist !== null  && emailExist?.emailVerified) return res.status(400).json({ message: "Email id already exist" })
+            if (emailExist !== null && emailExist?.emailVerified) return res.status(400).json({ message: "Email id already exist" })
 
 
             const value = Math.floor(Math.random() * Math.pow(10, 6))
@@ -278,18 +280,18 @@ module.exports = {
         const { email, otp } = req.body
 
         try {
-            
+
 
             const value = await db.get().collection(OTP_COLLECTION).findOne({ email: email })
-            
+
 
             if (value === null) return res.status(400).json({ message: "invalid otp or otp expired " })
 
             if (value.value != otp) return res.status(400).json({ message: " invalid OTP " })
-            
+
 
             db.get().collection(OTP_COLLECTION).deleteOne({ _id: value._id }).then(() => {
-                
+
 
                 db.get().collection(USER_COLLECTION).updateOne({ email: email }, { $set: { emailVerified: true } }).then(async () => {
 
@@ -327,7 +329,7 @@ module.exports = {
     },
 
 
-    reSendMobileOtp: ({phone}) => {
+    reSendMobileOtp: ({ phone }) => {
 
 
         try {
@@ -402,7 +404,7 @@ module.exports = {
     },
 
     forgotPassword: async (req, res) => {
-        const { email, username, phone } = req.body
+        const { email, phone } = req.body
         const clientURL = 'http://localhost:3000'
 
         if (email !== undefined) {
@@ -425,10 +427,10 @@ module.exports = {
             res.status(200).json({ message: " Link send in to Your email ", status, sendTo: email })
 
 
-        } else if (username !== undefined) {
-            const user = await db.get().collection(USER_COLLECTION).findOne({ username: username })
+        } else if (phone !== undefined) {
+            const user = await db.get().collection(USER_COLLECTION).findOne({ phone: phone })
 
-            if (user === null || user.emailVerified !== true) return res.status(401).json({ message: "invalid credentials " })
+            if (user === null || user.phoneVerified !== true) return res.status(401).json({ message: "invalid credentials " })
 
             let resetToken = crypto.randomBytes(32).toString("hex");
 
@@ -439,10 +441,20 @@ module.exports = {
             const link = `${clientURL}/passwordReset?token=${resetToken}&id=${user._id}`;
 
 
-            let status = sendPasswordResetLink({ emailto: user.email, link, name: user.name })
 
 
-            res.status(200).json({ message: " Link send in to Your email ", status, sendTo: email })
+
+
+            twilioClient.messages
+                .create({
+                    to: `+91${phone}`,
+                    from: '+17622525473',
+                    body: ` Hello ${user.name},Don't worry, we got you! Click the link below to reset your password.  ${link}`,
+                })
+                .then(message => console.log(message.sid)).catch(err=>console.log(err))
+
+
+            res.status(200).json({ message: " Link send in to Your email " })
 
 
         }
@@ -506,22 +518,24 @@ module.exports = {
         const { email } = req.body
 
         const user = await db.get().collection(USER_COLLECTION).findOne({ email })
-        
+
         if (!user?.isActive) return res.status(400).json({ message: "This Account was Blocked" })
-        
+
         if (user) {
 
 
-            
-            const  unReadNotifications= await db.get().collection(NOTIFICATIONS_COLLECTION).find({$and:[
-                {to:objectId(user._id)},
-                {read:false}
-                ]}).toArray() 
+
+            const unReadNotifications = await db.get().collection(NOTIFICATIONS_COLLECTION).find({
+                $and: [
+                    { to: objectId(user._id) },
+                    { read: false }
+                ]
+            }).toArray()
 
 
             let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
 
-            return res.status(200).json( {user, token,unReadNotificationsCount:unReadNotifications.length} )
+            return res.status(200).json({ user, token, unReadNotificationsCount: unReadNotifications.length })
         } else {
             return res.status(401).json({ message: "user Can't Exist" })
         }
@@ -562,25 +576,25 @@ module.exports = {
                 },
                 {
 
-                    $project:{
-                        _id:1,
-                        desc:1,
-                        files:1,
-                        location:1,
-                        tag:1,
-                        Accessibility:1,
-                        likes:1,
-                        comments:1,
-                        status:1,
-                        report:1,
-                        postedDate:1,
-                        userId:1,
+                    $project: {
+                        _id: 1,
+                        desc: 1,
+                        files: 1,
+                        location: 1,
+                        tag: 1,
+                        Accessibility: 1,
+                        likes: 1,
+                        comments: 1,
+                        status: 1,
+                        report: 1,
+                        postedDate: 1,
+                        userId: 1,
                         user: {
-                            _id:1,
+                            _id: 1,
                             name: 1,
                             ProfilePhotos: { $last: "$user.ProfilePhotos" }
                         }
-                        
+
                     }
 
                 },
@@ -851,136 +865,136 @@ module.exports = {
 
     },
 
-    getFollowers:async(req,res)=>{
-        const userId=req.params.id
+    getFollowers: async (req, res) => {
+        const userId = req.params.id
 
         try {
 
-            const followers =await db.get().collection(USER_COLLECTION).aggregate([
+            const followers = await db.get().collection(USER_COLLECTION).aggregate([
                 {
-                    $match :{_id:objectId(userId)}
+                    $match: { _id: objectId(userId) }
                 },
                 {
-                    $unwind : "$followers"   
+                    $unwind: "$followers"
                 },
                 {
-                    $lookup :{
-                        from:USER_COLLECTION,
-                        foreignField:"followers",
-                        localField:"_id",
-                        as:"users"
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        foreignField: "followers",
+                        localField: "_id",
+                        as: "users"
 
                     }
                 },
                 {
-                    $project:{
-                        users:1
+                    $project: {
+                        users: 1
                     }
                 },
                 {
-                    $unwind:"$users"
+                    $unwind: "$users"
                 },
                 {
-                    $project:{
-                        _id:"$users._id",
-                        name:"$users.name",
-                        username:"$users.username",
+                    $project: {
+                        _id: "$users._id",
+                        name: "$users.name",
+                        username: "$users.username",
                         ProfilePhotos: { $last: "$users.ProfilePhotos" }
 
                     }
                 }
-               
+
             ]).toArray()
 
-            res.status(200).json({followers})
+            res.status(200).json({ followers })
 
-            
+
         } catch (error) {
-            
+
         }
 
     },
 
-    getFollowings:async(req,res)=>{
-        const userId=req.params.id
+    getFollowings: async (req, res) => {
+        const userId = req.params.id
 
         try {
 
-            const followings =await db.get().collection(USER_COLLECTION).aggregate([
+            const followings = await db.get().collection(USER_COLLECTION).aggregate([
                 {
-                    $match :{_id:objectId(userId)}
+                    $match: { _id: objectId(userId) }
                 },
                 {
-                    $unwind : "$followings"   
+                    $unwind: "$followings"
                 },
                 {
-                    $lookup :{
-                        from:USER_COLLECTION,
-                        foreignField:"followings",
-                        localField:"_id",
-                        as:"users"
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        foreignField: "followings",
+                        localField: "_id",
+                        as: "users"
 
                     }
                 },
                 {
-                    $project:{
-                        _id:1,
-                        name:1,
-                        username:1,
+                    $project: {
+                        _id: 1,
+                        name: 1,
+                        username: 1,
                         ProfilePhotos: { $last: "$ProfilePhotos" }
 
                     }
                 }
-               
+
             ]).toArray()
 
             res.status(200).json(followings)
 
-            
+
         } catch (error) {
-            
+
         }
 
     },
 
-    getSavedPosts:async(req,res)=>{
-        const userId =req.params.id
+    getSavedPosts: async (req, res) => {
+        const userId = req.params.id
 
         try {
 
-            const SavedPosts =await db.get().collection(USER_COLLECTION).aggregate([
+            const SavedPosts = await db.get().collection(USER_COLLECTION).aggregate([
                 {
-                    $match: {_id:objectId(userId)}
+                    $match: { _id: objectId(userId) }
                 },
                 {
-                    $unwind :"$SavedPost"
+                    $unwind: "$SavedPost"
                 },
                 {
-                    $lookup:{
-                        from:POST_COLLECTION,
-                        localField:"SavedPost",
-                        foreignField:"_id",
-                        as:"SavedPost"
+                    $lookup: {
+                        from: POST_COLLECTION,
+                        localField: "SavedPost",
+                        foreignField: "_id",
+                        as: "SavedPost"
 
-                    }   
+                    }
                 },
                 {
-                    $unwind:"$SavedPost"
+                    $unwind: "$SavedPost"
                 },
                 {
-                    $project:{
-                        _id:"$SavedPost._id",
-                        desc:"$SavedPost.desc",
-                        files:"$SavedPost.files",
-                        location:"$SavedPost.location",
-                        tag:"$SavedPost.tag",
-                        Accessibility:"$SavedPost.Accessibility",
-                        likes:"$SavedPost.likes",
-                        comments:"$SavedPost.comments",
-                        userId:"$SavedPost.userId",
-                        status:"$SavedPost.status",
-                        report:"$SavedPost.report",
-                        postedDate:"$SavedPost.postedDate"
+                    $project: {
+                        _id: "$SavedPost._id",
+                        desc: "$SavedPost.desc",
+                        files: "$SavedPost.files",
+                        location: "$SavedPost.location",
+                        tag: "$SavedPost.tag",
+                        Accessibility: "$SavedPost.Accessibility",
+                        likes: "$SavedPost.likes",
+                        comments: "$SavedPost.comments",
+                        userId: "$SavedPost.userId",
+                        status: "$SavedPost.status",
+                        report: "$SavedPost.report",
+                        postedDate: "$SavedPost.postedDate"
                     }
                 },
                 {
@@ -996,20 +1010,20 @@ module.exports = {
                 },
                 {
                     $project: {
-                        _id:1,
-                        desc:1,
-                        files:1,
-                        location:1,
-                        tag:1,
-                        Accessibility:1,
-                        likes:1,
-                        comments:1,
-                        userId:1,
-                        status:1,
-                        report:1,
-                        postedDate:1,
+                        _id: 1,
+                        desc: 1,
+                        files: 1,
+                        location: 1,
+                        tag: 1,
+                        Accessibility: 1,
+                        likes: 1,
+                        comments: 1,
+                        userId: 1,
+                        status: 1,
+                        report: 1,
+                        postedDate: 1,
                         user: {
-                            _id:1,
+                            _id: 1,
                             name: 1,
                             ProfilePhotos: { $last: "$user.ProfilePhotos" }
                         }
@@ -1019,33 +1033,33 @@ module.exports = {
                 },
                 { $sort: { date: -1 } },
 
-                
 
-                
+
+
             ]).toArray()
 
-            res.status(200).json({SavedPosts})
-            
+            res.status(200).json({ SavedPosts })
+
         } catch (error) {
-            
+
         }
 
     },
 
-    getTagedPost:async(req,res)=>{
-        const userId =req.params.id
+    getTagedPost: async (req, res) => {
+        const userId = req.params.id
 
         try {
 
-            const TagedPost= await db.get().collection(POST_COLLECTION).aggregate([
+            const TagedPost = await db.get().collection(POST_COLLECTION).aggregate([
                 {
-                 $match:{status:"active"}   
+                    $match: { status: "active" }
                 },
                 {
-                    $unwind:"$tag"
+                    $unwind: "$tag"
                 },
                 {
-                    $match:{'tag._id':userId}
+                    $match: { 'tag._id': userId }
                 },
                 {
                     $lookup: {
@@ -1060,20 +1074,20 @@ module.exports = {
                 },
                 {
                     $project: {
-                        _id:1,
-                        desc:1,
-                        files:1,
-                        location:1,
-                        tag:1,
-                        Accessibility:1,
-                        likes:1,
-                        comments:1,
-                        userId:1,
-                        status:1,
-                        report:1,
-                        postedDate:1,
+                        _id: 1,
+                        desc: 1,
+                        files: 1,
+                        location: 1,
+                        tag: 1,
+                        Accessibility: 1,
+                        likes: 1,
+                        comments: 1,
+                        userId: 1,
+                        status: 1,
+                        report: 1,
+                        postedDate: 1,
                         user: {
-                            _id:1,
+                            _id: 1,
                             name: 1,
                             ProfilePhotos: { $last: "$user.ProfilePhotos" }
                         }
@@ -1082,15 +1096,15 @@ module.exports = {
 
                 },
                 { $sort: { date: -1 } },
-              
+
             ]).toArray()
 
-            res.status(200).json({TagedPost})
+            res.status(200).json({ TagedPost })
 
 
-            
+
         } catch (error) {
-            
+
         }
     },
 

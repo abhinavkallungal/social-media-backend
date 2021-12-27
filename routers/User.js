@@ -2,7 +2,7 @@ const express =require('express')
 
 const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag,getTagsDetailes,getPostComments} =require('../controllers/postControllers')
+const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag,getTagsDetailes,getPostComments,gteAllPostFiles} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
@@ -40,16 +40,17 @@ router.post("/verifyMobileOtp",verifyMobileOtp)
 router.post('/thirdPartyLogin',thirdPartyLogin)
 router.post('/forgotPasswordRequest',forgotPassword)
 router.post('/forgotPasswordReset',forgotPasswordReset)
-router.get('/getFollowers/:id',getFollowers)
-router.get('/getFollowings/:id',getFollowings)
-router.get('/getSavedPosts/:id',getSavedPosts)
-router.get('/getTagedPost/:id',getTagedPost)
+router.get('/getFollowers/:id',verifyLogin,getFollowers)
+router.get('/getFollowings/:id',verifyLogin,getFollowings)
+router.get('/getSavedPosts/:id',verifyLogin,getSavedPosts)
+router.get('/getTagedPost/:id',verifyLogin,getTagedPost)
+router.get('/gteAllPostFiles/:id',verifyLogin,gteAllPostFiles)
 
 
 
 router.post("/getAllPost",verifyLogin,getFeedPosts)
-router.patch("/editPost",editPost)
-router.delete("/deletePost,",deletePost)
+router.patch("/editPost",verifyLogin,editPost)
+router.delete("/deletePost,",verifyLogin,deletePost)
 router.post("/getProfileDetalils",verifyLogin,getProfileDetails)
 router.post("/addAccountDetails",verifyLogin,addAccountDetails)
 router.post("/addProfilePhoto",verifyLogin,addProfilePhoto)

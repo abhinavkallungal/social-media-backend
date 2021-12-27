@@ -751,6 +751,22 @@ module.exports = {
 
 
     },
+    gteAllPostFiles:async(req,res)=>{
+        let userId =req.params.id
+
+        try {
+            let allPostFiles= await db.get().collection(POST_COLLECTION).aggregate([
+                {
+                    $match:{userId:objectId(userId)}
+                },
+            ]).toArray()
+    
+            
+            res.status(200).json({allPostFiles})
+        } catch (error) {
+            
+        }
+    }
 
 
 }

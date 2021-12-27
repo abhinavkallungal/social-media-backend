@@ -11,7 +11,6 @@ module.exports = {
 
             jwt.verify(req.headers.authorization, 'secret', (err, authorizedData) => {
                 if (err) {
-                    console.log('ERROR: Could not connect to the protected route');
 
                     res.status(403).json({ error: err })
 
