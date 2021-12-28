@@ -184,7 +184,7 @@ module.exports = {
 
             ]).toArray()
 
-            res.status(200).json({ message: "post added", posts })
+            res.status(200).json({ message: "get All posts", posts })
 
         } catch (err) {
 

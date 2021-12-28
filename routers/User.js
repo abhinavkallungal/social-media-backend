@@ -45,11 +45,12 @@ router.get('/getFollowers/:id',verifyLogin,getFollowers)
 router.get('/getFollowings/:id',verifyLogin,getFollowings)
 router.get('/getSavedPosts/:id',verifyLogin,getSavedPosts)
 router.get('/getTagedPost/:id',verifyLogin,getTagedPost)
-router.get('/gteAllPostFiles/:id',verifyLogin,gteAllPostFiles)
+router.get('/getAllPostFiles/:id',verifyLogin,gteAllPostFiles)
 
 
 
 router.post("/getAllPost",verifyLogin,getFeedPosts)
+router.get("/getposts/",getAllPosts)
 router.patch("/editPost",verifyLogin,editPost)
 router.delete("/deletePost,",verifyLogin,deletePost)
 router.post("/getProfileDetalils",verifyLogin,getProfileDetails)
