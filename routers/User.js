@@ -1,6 +1,6 @@
 const express =require('express')
 
-const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,
+const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,resetPassword,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch} =require('../controllers/userControllers')
 const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriendsForTag,getTagsDetailes,getPostComments,gteAllPostFiles} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
@@ -40,6 +40,7 @@ router.post("/verifyMobileOtp",verifyMobileOtp)
 router.post('/thirdPartyLogin',thirdPartyLogin)
 router.post('/forgotPasswordRequest',forgotPassword)
 router.post('/forgotPasswordReset',forgotPasswordReset)
+router.post('/resetPassword',resetPassword)
 router.get('/getFollowers/:id',verifyLogin,getFollowers)
 router.get('/getFollowings/:id',verifyLogin,getFollowings)
 router.get('/getSavedPosts/:id',verifyLogin,getSavedPosts)

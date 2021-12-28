@@ -514,6 +514,41 @@ module.exports = {
 
     },
 
+    resetPassword:async(req,res)=>{
+
+        const {oldPassword,newPassword,confirmPassword,userId}=req.body
+
+        try {
+
+            const user = await db.get().collection(USER_COLLECTION).findOne({_id:objectId(userId)})
+
+            if(!user) return res.status(400).json({message:"User Can't Exist"})
+
+            let isPasswordCorrect = await bcrypt.compare(oldPassword, user.password)
+
+            if(!isPasswordCorrect) return res.status(400).json({message:"Your Old Password Is incorrect"})
+
+            if(NewPassword !==ConfirmPassword)  return res.status(400).json({message:"Your new Password Don,t match"})
+
+            const hashpassword = await bcrypt.hash(NewPassword, 10)
+
+
+            db.get().collection(USER_COLLECTION).updateOne({_id:objectId(userId)},{$set:{password:hashpassword}}).then(()=>{
+                res.status(200).json({message:'Your Password Reset Successfully'})
+            })
+            .catch((err)=> {
+                res.status(400).json({message:RegExp.message})
+            })
+
+
+        } catch (error) {
+
+            res.status(500).json({message:error.message})
+            
+        }
+
+    },
+
     thirdPartyLogin: async (req, res) => {
         const { email } = req.body
 

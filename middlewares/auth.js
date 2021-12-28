@@ -8,6 +8,7 @@ const db = require('../config/connection')
 module.exports = {
     verifyLogin: (req, res, next) => {
         if (req.headers.authorization) {
+            console.log(req.headers.authorization)
 
             jwt.verify(req.headers.authorization, 'secret', (err, authorizedData) => {
                 if (err) {
@@ -42,7 +43,6 @@ module.exports = {
             })
 
         } else {
-            console.log("dfads");
             res.status(403).json({ error: "no token availabel" })
 
         }
