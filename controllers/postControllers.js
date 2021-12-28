@@ -81,7 +81,7 @@ module.exports = {
         let files = []
         console.log("call", req.body);
 
-        let { desc, save, Accessibility, userId, location, tag } = req.body
+        let { desc, Accessibility, userId, location, tag } = req.body
 
         if (tag === undefined) {
             tag = new Array()
@@ -112,6 +112,10 @@ module.exports = {
 
                 res.status(200).json({ message: "post added", post })
 
+
+            }).catch((err)=>{
+
+                res.status(403).json({message:err})
 
             })
 
