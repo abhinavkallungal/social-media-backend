@@ -697,7 +697,7 @@ module.exports = {
     },
     DoSearch: async (req, res) => {
 
-        const { keyword, userId } = req.body
+        const { keyword, userId } = req.params
         try {
             let user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
             console.log(userId);

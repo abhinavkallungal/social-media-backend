@@ -396,11 +396,11 @@ module.exports = {
     },
     deletePost: (req, res) => {
 
-        const { id } = req.body
+        const { postId } = req.body
 
         try {
 
-            db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(id) }, {
+            db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, {
                 $set: {
                     status: "deleted"
                 }
