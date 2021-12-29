@@ -731,6 +731,17 @@ module.exports = {
                     }
                 },
                 {
+                    $project: {
+                        _id: 1,
+                        name: 1,
+                        followings:1,
+                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                        
+
+                    }
+
+                },
+                {
                     $addFields: {
                         following: {
                             $cond: [
@@ -740,10 +751,13 @@ module.exports = {
                             ]
                         }
                     }
-                }
+                },
+               
 
 
             ]).toArray()
+
+            console.log(searchresult);
 
             let users = searchresult.filter((item) => {
 
