@@ -8,7 +8,6 @@ const db = require('../config/connection')
 module.exports = {
     verifyLogin: (req, res, next) => {
         if (req.headers.authorization) {
-            console.log(req.headers.authorization)
 
             jwt.verify(req.headers.authorization, 'secret', (err, authorizedData) => {
                 if (err) {
