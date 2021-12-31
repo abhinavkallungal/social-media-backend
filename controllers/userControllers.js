@@ -581,10 +581,9 @@ module.exports = {
 
 
     getProfileDetails: async (req, res) => {
-        console.log(1);
-        const { userId } = req.body
+
+        const { userId } = req.params
         try {
-            console.log(2);
 
             let user = await db.get().collection(USER_COLLECTION).aggregate([
                 {

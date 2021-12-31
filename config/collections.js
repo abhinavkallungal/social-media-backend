@@ -7,5 +7,6 @@ module.exports={
     COMMENT_COLLECTION:'comments',
     REPORTS_COLLECTION:'reports',
     NOTIFICATIONS_COLLECTION:'notifications',
-    TOKEN_COLLECTION:'token'
+    TOKEN_COLLECTION:'token',
+    CONVERSATION_COLLECTION :'conversations'
 }

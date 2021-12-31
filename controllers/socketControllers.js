@@ -1,52 +1,33 @@
-const db = require('../config/connection')
-const {ONLINE_USERS_COLLECTION} =require('../config/collections')
-const { ObjectId } = require('mongodb')
+const { join, dirname }  =require('path')
+const  { Low, JSONFile } =require( 'lowdb')
+const { fileURLToPath } =require( 'url')
+
+
+// Use JSON file for storage
+const file = join(__dirname, 'db.json')
+const adapter = new JSONFile(file)
+const db = new Low(adapter)
+db.read()
+db.data = { posts: [] }
+db.data.posts.push({ id: 1, title: 'lowdb is awesome' })
+
+console.log(db);
+
+
+
 
 module.exports={
     addOnlineUser:({socketId,userId})=>{
+
         console.log("add online user");
         return new Promise(async(resolve,reject)=>{
-            let userexist = await db.get().collection(ONLINE_USERS_COLLECTION).findOne({userId:ObjectId(userId)})
-            if(userexist){
-                console.log("if");
-                db.get().collection(ONLINE_USERS_COLLECTION).updateOne({userId:ObjectId(userId)},{
-                    $set:{
-                        socketId:socketId
-                    }
-                }).then(()=>{
-                
-                }).catch(()=>{
-                    
-                })
 
-            }else{
-                console.log("else");
-                
-                db.get().collection(ONLINE_USERS_COLLECTION).insertOne({socketId,userId:ObjectId(userId)}).then(()=>{
-                
-                }).catch(()=>{
-                    
-                })
-
-            }
+            
 
             
         })
     },
     removeOnlineuser:({socketId})=>{
-        console.log("sc35 disconnected",socketId);
-        return new Promise(async(resolve,reject)=>{
-            let userexist =await db.get().collection(ONLINE_USERS_COLLECTION).findOne({socketId:socketId})
-            console.log("sock control 38",userexist);
-            if(userexist){
-                db.get().collection(ONLINE_USERS_COLLECTION).deleteOne({socketId:socketId}).then(()=>{
-                
-                }).catch(()=>{
-                    
-                })
-
-            }
-
-        })
+       
     }
 }
