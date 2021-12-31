@@ -735,7 +735,8 @@ module.exports = {
                         _id: 1,
                         name: 1,
                         followings:1,
-                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                        username:1,
+                        ProfilePhotos: { $last: "$ProfilePhotos" }
                         
 
                     }
