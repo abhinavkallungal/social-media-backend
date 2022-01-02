@@ -1158,6 +1158,39 @@ module.exports = {
     },
 
 
+    getUserDetailes:async(req,res)=>{
+
+        const {userId}= req.params
+
+        try {
+
+            let user = await db.get().collection(USER_COLLECTION).aggregate([
+                {
+                    $match :{_id:objectId(userId)}
+                },
+                {
+                    $project :{
+                        _id:1,
+                        name:1,
+                        username:1,
+                        ProfilePhotos: { $last: "$ProfilePhotos" }
+
+                    }
+                }
+            ]).toArray()
+            
+            
+            console.log(user);
+
+            res.status(200).json({user})
+            
+        } catch (error) {
+            
+        }
+
+    },
+
+
 
 
 

@@ -16,10 +16,11 @@ const { response } = require("express")
 
 
 
+
 module.exports = {
-    getFriendsForTag: async (req, res) => {
-        const { userId } = req.body
-        console.log("userId", req.body);
+    getFriends: async (req, res) => {
+        const { userId } = req.params
+        console.log("userId", );
 
         try {
             if (userId === undefined || userId === null) return res.status(204).json({ message: "insufficient content " })
@@ -51,10 +52,12 @@ module.exports = {
                 {
                     $project: {
                         _id: 0,
-                        user: {
-                            _id: 1,
-                            name: 1,
+                        user:{
+                            _id:1,
+                            name:1,
+                            profilePhotos: { $last: "$user.ProfilePhotos" }
                         }
+
 
                     }
 
@@ -196,8 +199,7 @@ module.exports = {
     },
     getFeedPosts: async (req, res) => {
         let { userId, page } = req.body
-        console.log(req.body);
-        console.log(">>>>>>>>>>>", req.body);
+      
 
         try {
             let posts = await db.get().collection(USER_COLLECTION).aggregate([
@@ -286,7 +288,6 @@ module.exports = {
 
             ]).toArray()
 
-            console.log(posts);
 
 
             if (posts.length > page * 10) {

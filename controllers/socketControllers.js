@@ -1,33 +1,51 @@
-const { join, dirname }  =require('path')
-const  { Low, JSONFile } =require( 'lowdb')
-const { fileURLToPath } =require( 'url')
+
+const low = require('lowdb')
+const FileSync = require('lowdb/adapters/FileSync')
+const adapter = new FileSync('./db.json')
+const db = low(adapter)
+db.defaults({
+    ONLINE_USERS: []
+});
 
 
-// Use JSON file for storage
-const file = join(__dirname, 'db.json')
-const adapter = new JSONFile(file)
-const db = new Low(adapter)
-db.read()
-db.data = { posts: [] }
-db.data.posts.push({ id: 1, title: 'lowdb is awesome' })
-
-console.log(db);
+let ONLINE_USERS = db.get('ONLINE_USERS');
+console.log(ONLINE_USERS.value());
 
 
 
 
-module.exports={
-    addOnlineUser:({socketId,userId})=>{
+module.exports = {
+    addOnlineUser: ({ socketId, userId }) => {
+        console.log(socketId, userId);
 
-        console.log("add online user");
-        return new Promise(async(resolve,reject)=>{
+        let exist = db.get('ONLINE_USERS').find({ userId: userId }).value()
 
-            
+        if (exist) {
 
-            
-        })
+            db.get('ONLINE_USERS').find({ userId: userId}).assign({ socketId: socketId }).write()
+        }else{
+
+            db.get('ONLINE_USERS').push({ userId, socketId}).write()
+
+        }
+
     },
-    removeOnlineuser:({socketId})=>{
-       
+    removeOnlineuser: ({ socketId }) => {
+
+        db.get('ONLINE_USERS').remove({ socketId: socketId }).write()
+
+
+    },
+    findUser:async({userId})=>{
+
+        console.log('usrid',userId+'');
+
+        let user =await db.get("ONLINE_USERS").filter({ userId:userId+''}).value()
+
+        console.log(user);
+
+        return user[0]   
+
+
     }
 }
