@@ -65,20 +65,23 @@ const io = socket(server);
 
 
 
+
 const onConnection = (socket) => {
+
   console.log("new connection ",socket.id);
   userHandlers(io, socket);
-
-
+  
+  
   socket.on('disconnect',()=>{
     console.log("disconnect",socket.id);
     removeOnlineuser({socketId:socket.id})
   })
-
-
+  
+  
 }
 
 
 
 io.on("connection", onConnection);
+
 

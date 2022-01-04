@@ -1,7 +1,9 @@
 const { addOnlineUser, removeOnlineuser ,findUser} = require("../controllers/socketControllers")
 const db =require('../config/connection')
-const {POST_COLLECTION,USER_COLLECTION, ONLINE_USERS_COLLECTION,NOTIFICATIONS_COLLECTION} =require('../config/collections')
+const {USER_COLLECTION,CONVERSATION_COLLECTION,MESSAGE_COLLECTION,NOTIFICATIONS_COLLECTION} =require('../config/collections')
 const { ObjectId } = require("mongodb")
+const { NetworkContext } = require("twilio/lib/rest/supersim/v1/network")
+
 
 
 
@@ -112,54 +114,144 @@ module.exports = (io, socket) => {
             {read:false}
             ]}).toArray()            
 
-            socket.to(OnlineUserExist.socketId).emit("sendCommentNotification",{notifications:notifications[0] ,unReadNotificationsCount:unReadNotifications.length} );
+            io.to(OnlineUserExist.socketId).emit("sendCommentNotification",{notifications:notifications[0] ,unReadNotificationsCount:unReadNotifications.length} );
+            socket.removeAllListeners();
+
         }
-
+        
     }
 
-   
+    const sendMessage=async({message,sender,userId})=>{
 
-    const disconnect = (socketId) => {
-        console.log(socketId, ">>>>>>>>>>>>>>>");
-        removeOnlineuser({ socketId })
-    }
-    const DoPostLike= async({ postId, userId }) => {
-        console.log(postId, userId);
+        console.log("sendMessage");
+
+        let messageId
+
 
         try {
-            let post = await db.get().collection(POST_COLLECTION).findOne({ _id: ObjectId(postId) })
-            let LikeExist = post?.likes.findIndex((like) => like == userId)
-            if (LikeExist === -1) {
-                db.get().collection(POST_COLLECTION).updateOne({ _id: ObjectId(postId) }, { $push: { likes: ObjectId(userId) } }).then(() => {
 
-                  
+           let conversation =  await  db.get().collection(CONVERSATION_COLLECTION).aggregate([
+                {
+                    $match :{ users: { $all: [sender, userId] } } 
+                 
+                }
+                
+            ]).toArray()
 
+            if(conversation[0]){
+                
+              await  db.get().collection(MESSAGE_COLLECTION).insertOne({createdAt:new Date(),sender,message,conversation:conversation[0]._id,read:false}).then((result)=>{
+
+                    messageId=result.insertedId
+
+                    console.log("result.insertedId",result.insertedId);
+                    
+                    
+                    
                 })
-            } else {
-                db.get().collection(POST_COLLECTION).updateOne({ _id: ObjectId(postId) }, { $pull: { likes: ObjectId(userId) } }).then(() => {
-
-                })
-
+                
             }
+            
+            
+            if(!conversation[0]){
+                await  db.get().collection(CONVERSATION_COLLECTION).insertOne({users:[sender,userId],createdAt:new Date(),}).then((result)=>{
+                    
+                    console.log(result);
+                    
+                    db.get().collection(MESSAGE_COLLECTION).insertOne({createdAt:new Date(),sender,message,conversation:result.insertedId}).then((result)=>{
+                        
+                        messageId=result.insertedId
+                        console.log("result.insertedId",result.insertedId);
+
+                    })
+
+
+                })
+            }
+
+            let OnlineUserExist= await findUser({userId:userId})
+            console.log(">>",OnlineUserExist,messageId);
+    
+            if(OnlineUserExist){
+                const  message= await db.get().collection(MESSAGE_COLLECTION).find({_id:messageId}).toArray()  
+
+                if(message){
+                    console.log(message);
+
+                    io.to(OnlineUserExist.socketId).emit("doReceiveMessage",message );
+                }
+
+               
+            }
+
+
+            
         } catch (error) {
 
+            console.log(error);
+            
         }
 
+    }
+
+    const notificationSeen= async(userId)=>{
 
 
+        try {
+            db.get().collection(NOTIFICATIONS_COLLECTION).updateMany({"to":ObjectId(userId),"read":false},{$set:{read:true}}).then(async(data)=>{
 
+                let OnlineUserExist= await findUser({userId:userId})
 
+                if(OnlineUserExist){
+                    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>repeat");
+
+                    io.to(OnlineUserExist.socketId).emit("notificationCound",notification=0)
+
+                }
+
+            })
+        } catch (error) {
+
+            console.log(error);
+            
+        }
 
     }
 
-    doLike = () => {
-        console.log("fsdfasd");
+
+    const getNotificationCound= async({userId})=>{
+
+
+        try {
+           let Notifications = await db.get().collection(NOTIFICATIONS_COLLECTION).find({"to":ObjectId(userId),"read":false}).toArray()
+
+                let OnlineUserExist= await findUser({userId:userId})
+
+                if(OnlineUserExist){
+                    console.log(Notifications.length , OnlineUserExist.socketId);
+                    io.to(OnlineUserExist.socketId).emit("notificationCound",{notification:Notifications.length})
+
+                }
+
+            
+        } catch (error) {
+
+            console.log(error);
+            
+        }
+
     }
+
+    
 
     socket.on("login",adding);
    
     socket.on('dolike', LikeNotification)
     socket.on('docomment', CommentNotification)
+    socket.on('doSendMessage', sendMessage)
+    socket.on('notificationSeen', notificationSeen)
+    socket.on('getNotificationCound', getNotificationCound)
+    
 
 }
 

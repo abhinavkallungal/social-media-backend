@@ -1,6 +1,7 @@
 const db = require("../config/connection")
 const {CONVERSATION_COLLECTION,MESSAGE_COLLECTION} =require('../config/collections')
 const { ObjectId } = require("mongodb")
+const {io,socket} =require('../app')
 
 module.exports={
         createConversation:(req,res)=>{
@@ -43,7 +44,7 @@ module.exports={
 
                 if(conversation[0]){
                     
-                    db.get().collection(MESSAGE_COLLECTION).insertOne({createdAt:new Date(),sender,message,conversation:conversation[0]._id}).then((data)=>{
+                    db.get().collection(MESSAGE_COLLECTION).insertOne({createdAt:new Date(),sender,message,conversation:conversation[0]._id,read:false}).then((data)=>{
                         
                           res.status(200).json({message:"message saved"})
 
@@ -68,14 +69,6 @@ module.exports={
                 }
 
 
-
-
-
-
-                
-
-
-
                 
             } catch (error) {
 
@@ -85,7 +78,52 @@ module.exports={
 
         },
 
-        getmessages:(req,res)=>{
-            
-        }
-}
+        getmessages:async(req,res)=>{
+            const {sender,receiver}=req.body
+
+            try {
+
+                let conversation =  await  db.get().collection(CONVERSATION_COLLECTION).aggregate([
+                    {
+                        $match :{ users: { $all: [sender, receiver] } } 
+                     
+                    }
+                    
+                ]).toArray()
+
+                if(conversation[0]){
+
+                    let messages= await db.get().collection(MESSAGE_COLLECTION).aggregate([
+                        {
+                            $match :{conversation:ObjectId(conversation[0]._id)}
+                        },
+                       
+                        
+                    ]).toArray()
+
+                    res.status(200).json({messages})
+
+                }else{
+
+                    res.status(204).json({message:" previous message not fond "})
+
+                }
+
+
+
+
+                
+            } catch (error) {
+
+                console.log(error);
+
+                res.status(500).json({message:error.message})
+                
+            }
+
+
+        },
+
+        
+    }
+    

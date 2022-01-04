@@ -4,7 +4,7 @@ const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPar
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch,getUserDetailes} =require('../controllers/userControllers')
 const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriends,getTagsDetailes,getPostComments,gteAllPostFiles} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
-const {sendMessage} =require('../controllers/chatControllers')
+const {sendMessage,getmessages} =require('../controllers/chatControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
 const multer  = require('multer')
@@ -78,7 +78,8 @@ router.post('/getAllNotifications',verifyLogin,getAllNotification)
 
 router.get('/getUserDetailes/:userId',verifyLogin,getUserDetailes)
 
-router.post('/sendMessage',sendMessage)
+//router.post('/sendMessage',sendMessage)
+router.post('/getmessages',getmessages)
 
 
 
