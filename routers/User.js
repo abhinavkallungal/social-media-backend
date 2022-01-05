@@ -70,7 +70,7 @@ router.post("/postLike",verifyLogin,DoPostLike)
 router.post("/getPostComments",verifyLogin,getPostComments)
 router.post("/getTagsDetailes",verifyLogin,getTagsDetailes)
 router.post("/postSave",verifyLogin,DoPostSave)
-router.post("/deletePost",verifyLogin,DoDeletepost)
+router.delete("/deletePost",verifyLogin,DoDeletepost)
 router.post("/comment",verifyLogin,DoComment)
 router.post("/report",verifyLogin,DoReport)
 

@@ -114,14 +114,12 @@ module.exports = (io, socket) => {
             {read:false}
             ]}).toArray()            
 
-            io.to(OnlineUserExist.socketId).emit("sendCommentNotification",{notifications:notifications[0] ,unReadNotificationsCount:unReadNotifications.length} );
-            socket.removeAllListeners();
-
+            socket.to(OnlineUserExist.socketId).emit("sendCommentNotification",{notifications:notifications[0] ,unReadNotificationsCount:unReadNotifications.length} );
         }
         
     }
 
-    const sendMessage=async({message,sender,userId})=>{
+    const sendMessage=async({message,sender,receiver})=>{
 
         console.log("sendMessage");
 
@@ -132,7 +130,7 @@ module.exports = (io, socket) => {
 
            let conversation =  await  db.get().collection(CONVERSATION_COLLECTION).aggregate([
                 {
-                    $match :{ users: { $all: [sender, userId] } } 
+                    $match :{ users: { $all: [sender, receiver] } } 
                  
                 }
                 
@@ -154,7 +152,7 @@ module.exports = (io, socket) => {
             
             
             if(!conversation[0]){
-                await  db.get().collection(CONVERSATION_COLLECTION).insertOne({users:[sender,userId],createdAt:new Date(),}).then((result)=>{
+                await  db.get().collection(CONVERSATION_COLLECTION).insertOne({users:[sender,receiver],createdAt:new Date(),}).then((result)=>{
                     
                     console.log(result);
                     
@@ -169,16 +167,15 @@ module.exports = (io, socket) => {
                 })
             }
 
-            let OnlineUserExist= await findUser({userId:userId})
+            let OnlineUserExist= await findUser({userId:receiver})
             console.log(">>",OnlineUserExist,messageId);
     
             if(OnlineUserExist){
                 const  message= await db.get().collection(MESSAGE_COLLECTION).find({_id:messageId}).toArray()  
 
                 if(message){
-                    console.log(message);
 
-                    io.to(OnlineUserExist.socketId).emit("doReceiveMessage",message );
+                    socket.to(OnlineUserExist.socketId).emit("doReceiveMessage",message );
                 }
 
                

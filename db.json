@@ -1,12 +1,3 @@
 {
-  "ONLINE_USERS": [
-    {
-      "userId": "61ad87b3ad7da565715856f2",
-      "socketId": "ca0kxgw_yb4UcZ4uAAAB"
-    },
-    {
-      "userId": "61ad8641ad7da565715856ef",
-      "socketId": "gVet_MtcuEVMC33rAAAf"
-    }
-  ]
+  "ONLINE_USERS": []
 }
