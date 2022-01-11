@@ -1,10 +1,13 @@
 const express =require('express')
 
+
+
 const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,resetPassword,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch,getUserDetailes} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriends,getTagsDetailes,getPostComments,gteAllPostFiles} =require('../controllers/postControllers')
+const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriends,getTagsDetailes,getPostComments,gteAllPostFiles,videoUpload} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
 const {sendMessage,getmessages} =require('../controllers/chatControllers')
+const {addStory,getALLStories,getStoriesSideBar} =require('../controllers/storiesControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
 const multer  = require('multer')
@@ -70,9 +73,10 @@ router.post("/postLike",verifyLogin,DoPostLike)
 router.post("/getPostComments",verifyLogin,getPostComments)
 router.post("/getTagsDetailes",verifyLogin,getTagsDetailes)
 router.post("/postSave",verifyLogin,DoPostSave)
+
 router.delete("/deletePost",verifyLogin,DoDeletepost)
-router.post("/comment",verifyLogin,DoComment)
 router.post("/report",verifyLogin,DoReport)
+router.post("/comment",verifyLogin,DoComment)
 
 router.post('/getAllNotifications',verifyLogin,getAllNotification)
 
@@ -81,9 +85,13 @@ router.get('/getUserDetailes/:userId',verifyLogin,getUserDetailes)
 //router.post('/sendMessage',sendMessage)
 router.post('/getmessages',getmessages)
 
+router.post('/upload', videoUpload)
 
+router.post('/addStory',addStory)
 
+router.get('/getALLStories',getALLStories)
 
+router.get('/getStoriesSideBar',getStoriesSideBar)
 
 
 

@@ -6,11 +6,11 @@ const userHandlers = require("../socket/userHandlers")
 const { test } = require('../socket/socket')
 const multer = require('multer')
 const upload = multer({ dest: 'uploads/' })
-const { uploadFile } = require('./awsS3Controllers')
+const { uploadFile ,videoUpload } = require('./awsS3Controllers')
 const { post } = require("../routers/User")
 const { response } = require("express")
-
-
+const fs =require("fs")
+const md5 =require('md5')
 
 
 
@@ -20,7 +20,7 @@ const { response } = require("express")
 module.exports = {
     getFriends: async (req, res) => {
         const { userId } = req.params
-        console.log("userId", );
+        console.log("userId",);
 
         try {
             if (userId === undefined || userId === null) return res.status(204).json({ message: "insufficient content " })
@@ -52,9 +52,9 @@ module.exports = {
                 {
                     $project: {
                         _id: 0,
-                        user:{
-                            _id:1,
-                            name:1,
+                        user: {
+                            _id: 1,
+                            name: 1,
                             profilePhotos: { $last: "$user.ProfilePhotos" }
                         }
 
@@ -80,6 +80,7 @@ module.exports = {
     },
 
     addPost: async (req, res) => {
+        console.log("here");
         let result
         let files = []
         console.log("call", req.body);
@@ -116,9 +117,9 @@ module.exports = {
                 res.status(200).json({ message: "post added", post })
 
 
-            }).catch((err)=>{
+            }).catch((err) => {
 
-                res.status(403).json({message:err})
+                res.status(403).json({ message: err })
 
             })
 
@@ -129,6 +130,7 @@ module.exports = {
 
         if (req.files.length > 0) {
             req.files.map(async (file) => {
+                console.log(file);
                 result = await uploadFile(file)
                 files.push(result.Location)
 
@@ -150,15 +152,37 @@ module.exports = {
         }
 
 
-
-
-
-
-
-
-
-
     },
+
+    videoUpload: async (req, res) => {
+        const { name, currentChunkIndex, totalChunks,postId } = req.query;
+        const firstChunk = parseInt(currentChunkIndex) === 0;
+        const lastChunk = parseInt(currentChunkIndex) === parseInt(totalChunks) - 1;
+        const ext = name.split('.').pop();
+        const data = req.body.toString().split(',')[1];
+        const buffer = new Buffer.from(data, 'base64');
+        const tmpFilename = 'tmp_' + md5(name + req.ip) + '.' + ext;
+        if (firstChunk && fs.existsSync('./uploads/' + tmpFilename)) {
+            fs.unlinkSync('./uploads/' + tmpFilename);
+        }
+        fs.appendFileSync('./uploads/' + tmpFilename, buffer);
+        if (lastChunk) {
+            const finalFilename = postId+'.' + ext;
+            fs.renameSync('./uploads/' + tmpFilename, './uploads/' + finalFilename);
+            
+            let result = await videoUpload( finalFilename)
+
+            await db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)},{$set:{video:result.Location}},{ upsert: true } )
+
+           let post = await db.get().collection(POST_COLLECTION).findOne({_id:objectId(postId)})
+            console.log(result);
+            res.json({ finalFilename ,post });
+        } else {
+            res.json('ok');
+        }
+    },
+
+    
     getAllPosts: async (req, res) => {
 
         try {
@@ -178,10 +202,9 @@ module.exports = {
                     $unwind: "$user",
                 },
 
-
-
                 { $sort: { postedDate: -1 } }
 
+                
 
 
 
@@ -199,7 +222,7 @@ module.exports = {
     },
     getFeedPosts: async (req, res) => {
         let { userId, page } = req.body
-      
+
 
         try {
             let posts = await db.get().collection(USER_COLLECTION).aggregate([
@@ -241,6 +264,7 @@ module.exports = {
                         report: '$post.report',
                         postedDate: '$post.postedDate',
                         userId: '$post.userId',
+                        video:'$post.video'
 
 
                     }
@@ -273,6 +297,7 @@ module.exports = {
                         report: 1,
                         postedDate: 1,
                         userId: 1,
+                        video:1,
                         user: {
                             _id: 1,
                             name: 1,
@@ -567,9 +592,9 @@ module.exports = {
         try {
             db.get().collection(COMMENT_COLLECTION).insertOne({ postId: objectId(postId), userId: objectId(userId), comment, date: moment().format() }).then((result) => {
                 db.get().collection(POST_COLLECTION).findOneAndUpdate({ _id: objectId(postId) }, { $push: { comments: result.insertedId } }).then(async (result) => {
-                   
 
-                    let post =result.value
+
+                    let post = result.value
 
 
                     let comments = await db.get().collection(COMMENT_COLLECTION).aggregate([
@@ -608,7 +633,7 @@ module.exports = {
                     ]).toArray()
 
                     if (userId === post.userId) {
-                       return  res.status(200).json({ message: "comment added", comments: comments })
+                        return res.status(200).json({ message: "comment added", comments: comments })
 
 
                     } else {
@@ -624,10 +649,10 @@ module.exports = {
                             }
                         ).then((result) => {
 
-                                return  res.status(200).json({ message: "comment added", comments: comments ,NotificationId: result.insertedId  })
+                            return res.status(200).json({ message: "comment added", comments: comments, NotificationId: result.insertedId })
 
-                            
-                        }).catch((error)=>{
+
+                        }).catch((error) => {
 
 
                             res.status(500).json({ message: err.message })
@@ -756,20 +781,20 @@ module.exports = {
 
 
     },
-    gteAllPostFiles:async(req,res)=>{
-        let userId =req.params.id
+    gteAllPostFiles: async (req, res) => {
+        let userId = req.params.id
 
         try {
-            let allPostFiles= await db.get().collection(POST_COLLECTION).aggregate([
+            let allPostFiles = await db.get().collection(POST_COLLECTION).aggregate([
                 {
-                    $match:{userId:objectId(userId)}
+                    $match: { userId: objectId(userId) }
                 },
             ]).toArray()
-    
-            
-            res.status(200).json({allPostFiles})
+
+
+            res.status(200).json({ allPostFiles })
         } catch (error) {
-            
+
         }
     }
 

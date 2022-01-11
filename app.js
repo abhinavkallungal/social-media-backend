@@ -31,6 +31,8 @@ app.use(passport.initialize())
 
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.raw({type:'application/octet-stream', limit:'100mb'}));
+
 app.use(express.json());
 
 
