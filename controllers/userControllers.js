@@ -12,6 +12,7 @@ const twilioClient = require('twilio')(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 const objectId = require('mongodb').ObjectID
 const crypto = require("crypto")
 const { existsSync } = require("fs")
+const { ObjectId } = require("mongodb")
 
 
 module.exports = {
@@ -451,7 +452,7 @@ module.exports = {
                     from: '+17622525473',
                     body: ` Hello ${user.name},Don't worry, we got you! Click the link below to reset your password.  ${link}`,
                 })
-                .then(message => console.log(message.sid)).catch(err=>console.log(err))
+                .then(message => console.log(message.sid)).catch(err => console.log(err))
 
 
             res.status(200).json({ message: " Link send in to Your email " })
@@ -514,37 +515,42 @@ module.exports = {
 
     },
 
-    resetPassword:async(req,res)=>{
+    resetPassword: async (req, res) => {
 
-        const {oldPassword,newPassword,confirmPassword,userId}=req.body
+        const { oldPassword, newPassword, confirmPassword, userId } = req.body
+        console.log(req.body);
 
         try {
 
-            const user = await db.get().collection(USER_COLLECTION).findOne({_id:objectId(userId)})
+            const user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
 
-            if(!user) return res.status(400).json({message:"User Can't Exist"})
+            console.log(user);
+
+            if (!user) return res.status(400).json({ message: "User Can't Exist" })
 
             let isPasswordCorrect = await bcrypt.compare(oldPassword, user.password)
 
-            if(!isPasswordCorrect) return res.status(400).json({message:"Your Old Password Is incorrect"})
+            console.log(isPasswordCorrect);
 
-            if(NewPassword !==ConfirmPassword)  return res.status(400).json({message:"Your new Password Don,t match"})
+            if (!isPasswordCorrect) return res.status(400).json({ message: "Your Old Password Is incorrect" })
 
-            const hashpassword = await bcrypt.hash(NewPassword, 10)
+            if (newPassword !== confirmPassword) return res.status(400).json({ message: "Your new Password Don,t match" })
+
+            const hashpassword = await bcrypt.hash(newPassword, 10)
 
 
-            db.get().collection(USER_COLLECTION).updateOne({_id:objectId(userId)},{$set:{password:hashpassword}}).then(()=>{
-                res.status(200).json({message:'Your Password Reset Successfully'})
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $set: { password: hashpassword } }).then(() => {
+                res.status(200).json({ message: 'Your Password Reset Successfully' })
             })
-            .catch((err)=> {
-                res.status(400).json({message:RegExp.message})
-            })
+                .catch((err) => {
+                    res.status(400).json({ message: RegExp.message })
+                })
 
 
         } catch (error) {
 
-            res.status(500).json({message:error.message})
-            
+            res.status(500).json({ message: error.message })
+
         }
 
     },
@@ -623,6 +629,7 @@ module.exports = {
                         report: 1,
                         postedDate: 1,
                         userId: 1,
+                        video:1,
                         user: {
                             _id: 1,
                             name: 1,
@@ -694,6 +701,85 @@ module.exports = {
         }
 
     },
+
+    AddSocialAccount: (req, res) => {
+        
+        const {socialAccounts,userId} =req.body
+        console.log(socialAccounts,userId);
+
+        if(userId===undefined) return res.status(401).json({message:"id is undefiend"})
+
+       
+        try {
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, {$set: socialAccounts}, {upsert: true}).then((result) => {
+                console.log(result);
+                db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((user) => {
+                    res.status(200).json(user)
+                }).catch((err) => {
+                    res.status(500).json({ err })
+
+                })
+
+
+            }).catch((error) => {
+                return res.status(500).json({ error: error.message });
+
+            })
+
+        } catch (error) {
+
+
+            console.log(error);
+
+            return res.status(500).json({ error: error.message });
+
+        }
+
+    },
+
+    getSocialAccounts:async(req,res)=>{
+
+        const userId=req.params.userId
+
+        console.log(userId);
+
+        if(userId===undefined) return res.status(401).json({message:"id is undefiend"})
+
+
+        try {
+
+           const socialAccounts=await  db.get().collection(USER_COLLECTION).aggregate([
+                {
+                    $match:{_id:objectId(userId)}
+                },
+                {
+                    $project:{
+                        _id:0,
+                        Facebook: 1,
+                        Twitter: 1,
+                        LinkedIn: 1,
+                        Instagram: 1
+                        
+                    }
+                }
+            ]).toArray()
+
+            console.log(socialAccounts);
+
+            res.status(200).json({socialAccounts})
+
+
+
+        } catch (error) {
+
+            console.log(error);
+
+            res.status(500).json({message:""})
+            
+        }
+    },
+
+
     DoSearch: async (req, res) => {
 
         const { keyword, userId } = req.params
@@ -733,10 +819,10 @@ module.exports = {
                     $project: {
                         _id: 1,
                         name: 1,
-                        followings:1,
-                        username:1,
+                        followings: 1,
+                        username: 1,
                         ProfilePhotos: { $last: "$ProfilePhotos" }
-                        
+
 
                     }
 
@@ -752,7 +838,7 @@ module.exports = {
                         }
                     }
                 },
-               
+
 
 
             ]).toArray()
@@ -861,6 +947,65 @@ module.exports = {
 
     },
 
+    getFollowRequest: async (req, res) => {
+
+        let userId = req.params.userId.trim()
+
+        try {
+
+
+
+            console.log(userId);
+            if (userId === null ||userId ===undefined) return res.status(401).json({ message: "userid is null " })
+
+            let followRequest = await db.get().collection(USER_COLLECTION).aggregate([
+                {
+                    $match: { "_id": ObjectId(userId) },
+                },
+                {
+                    $project:
+                        { users: { $setDifference: [ "$followers","$followings"] }, _id: 0 }
+                },
+                {
+                    $unwind: "$users"
+                },
+                {
+                    $lookup: {
+                        from: USER_COLLECTION,
+                        localField: "users",
+                        foreignField: '_id',
+                        as: "user"
+                    }
+                },
+                {
+                    $unwind:"$user"
+                },
+                {
+                    $project:{
+                        _id:"$user._id",
+                        name:"$user.name",
+                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                    }
+                }
+
+
+            ]).toArray()
+
+            console.log(followRequest);
+
+            res.status(200).json({ followRequest })
+
+
+        } catch (error) {
+            console.log(error);
+
+            res.status(500).json({ error })
+
+
+        }
+
+    },
+
     addProfilePhoto: (req, res) => {
         console.log(req.body);
         const { profilePhoto, currentuserId } = req.body
@@ -929,17 +1074,13 @@ module.exports = {
                 {
                     $lookup: {
                         from: USER_COLLECTION,
-                        foreignField: "followers",
-                        localField: "_id",
+                        foreignField: "_id",
+                        localField: "followers",
                         as: "users"
 
                     }
                 },
-                {
-                    $project: {
-                        users: 1
-                    }
-                },
+             
                 {
                     $unwind: "$users"
                 },
@@ -973,31 +1114,35 @@ module.exports = {
                 {
                     $match: { _id: objectId(userId) }
                 },
-                {
-                    $unwind: "$followings"
-                },
+                
                 {
                     $lookup: {
                         from: USER_COLLECTION,
-                        foreignField: "followings",
-                        localField: "_id",
+                        foreignField: "_id",
+                        localField: "followings",
                         as: "users"
 
                     }
                 },
                 {
+                    $unwind:"$users"
+                },
+                {
                     $project: {
-                        _id: 1,
-                        name: 1,
-                        username: 1,
-                        ProfilePhotos: { $last: "$ProfilePhotos" }
+                        _id: "$users._id",
+                        name: "$users.name",
+                        username: "$users.username",
+                        ProfilePhotos: { $last: "$users.ProfilePhotos" }
 
                     }
                 }
 
             ]).toArray()
 
-            res.status(200).json(followings)
+            console.log(followings);
+
+
+            res.status(200).json({followings})
 
 
         } catch (error) {
@@ -1158,34 +1303,34 @@ module.exports = {
     },
 
 
-    getUserDetailes:async(req,res)=>{
+    getUserDetailes: async (req, res) => {
 
-        const {userId}= req.params
+        const { userId } = req.params
 
         try {
 
             let user = await db.get().collection(USER_COLLECTION).aggregate([
                 {
-                    $match :{_id:objectId(userId)}
+                    $match: { _id: objectId(userId) }
                 },
                 {
-                    $project :{
-                        _id:1,
-                        name:1,
-                        username:1,
+                    $project: {
+                        _id: 1,
+                        name: 1,
+                        username: 1,
                         ProfilePhotos: { $last: "$ProfilePhotos" }
 
                     }
                 }
             ]).toArray()
-            
-            
+
+
             console.log(user);
 
-            res.status(200).json({user})
-            
+            res.status(200).json({ user })
+
         } catch (error) {
-            
+
         }
 
     },

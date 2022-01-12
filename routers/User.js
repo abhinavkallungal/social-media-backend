@@ -2,7 +2,8 @@ const express =require('express')
 
 
 
-const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,resetPassword,
+const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,getFollowRequest,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,resetPassword,AddSocialAccount,
+    getSocialAccounts,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch,getUserDetailes} =require('../controllers/userControllers')
 const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriends,getTagsDetailes,getPostComments,gteAllPostFiles,videoUpload} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
@@ -59,8 +60,10 @@ router.get("/getposts/",getAllPosts)
 router.patch("/editPost",verifyLogin,editPost)
 //router.delete("/deletePost,",verifyLogin,deletePost)
 router.get("/getProfileDetails/:userId",getProfileDetails)
-router.post("/addAccountDetails",verifyLogin,addAccountDetails)
 router.post("/addProfilePhoto",verifyLogin,addProfilePhoto)
+router.post("/addAccountDetails",verifyLogin,addAccountDetails)
+router.post("/AddSocialAccount",verifyLogin,AddSocialAccount)
+router.get("/getSocialAccounts/:userId",getSocialAccounts)
 router.post("/addCoverPhoto",verifyLogin,addCoverPhoto)
 
 
@@ -93,6 +96,7 @@ router.get('/getALLStories',getALLStories)
 
 router.get('/getStoriesSideBar',getStoriesSideBar)
 
+router.get('/getFollowRequest/:userId',getFollowRequest)
 
 
 module.exports=router
