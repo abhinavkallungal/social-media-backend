@@ -1,3 +1,8 @@
 {
-  "ONLINE_USERS": []
+  "ONLINE_USERS": [
+    {
+      "userId": "61ad8641ad7da565715856ef",
+      "socketId": "cA0Ydd0qLgXNkYLTAAAj"
+    }
+  ]
 }
