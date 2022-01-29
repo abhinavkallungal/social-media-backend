@@ -1,4 +1,4 @@
-const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION, NOTIFICATIONS_COLLECTION, TOKEN_COLLECTION } = require("../config/collections")
+const { USER_COLLECTION, OTP_COLLECTION, POST_COLLECTION, NOTIFICATIONS_COLLECTION, TOKEN_COLLECTION, BANNER_COLLECTION } = require("../config/collections")
 const db = require('../config/connection')
 const { sendEmailOtp, sendPasswordResetLink } = require('../controllers/emailControllers')
 const jwt = require('jsonwebtoken')
@@ -13,7 +13,7 @@ const objectId = require('mongodb').ObjectID
 const crypto = require("crypto")
 const { existsSync } = require("fs")
 const { ObjectId } = require("mongodb")
-
+ 
 
 module.exports = {
 
@@ -56,7 +56,7 @@ module.exports = {
     // if success return statuscode  200  and satatus true
 
     Signup: async (req, res) => {
-        console.log(1);
+
 
         const { email, password, name, username, phone } = req.body
 
@@ -67,9 +67,9 @@ module.exports = {
         try {
 
             if (email !== undefined && phone === undefined) {
-                console.log(email);
+
                 let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
-                console.log(emailExist);
+
                 if (emailExist !== null && emailExist.emailVerified === true) return res.status(400).json({ message: "Email already exist" })
                 const hashpassword = await bcrypt.hash(password, 10)
                 if (emailExist !== null && emailExist.emailVerified === false) {
@@ -146,7 +146,6 @@ module.exports = {
     login: async (req, res) => {
 
         const { email, password, username, phone } = req.body
-        console.log(req.body);
 
 
         try {
@@ -629,7 +628,7 @@ module.exports = {
                         report: 1,
                         postedDate: 1,
                         userId: 1,
-                        video:1,
+                        video: 1,
                         user: {
                             _id: 1,
                             name: 1,
@@ -703,15 +702,15 @@ module.exports = {
     },
 
     AddSocialAccount: (req, res) => {
-        
-        const {socialAccounts,userId} =req.body
-        console.log(socialAccounts,userId);
 
-        if(userId===undefined) return res.status(401).json({message:"id is undefiend"})
+        const { socialAccounts, userId } = req.body
+        console.log(socialAccounts, userId);
 
-       
+        if (userId === undefined) return res.status(401).json({ message: "id is undefiend" })
+
+
         try {
-            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, {$set: socialAccounts}, {upsert: true}).then((result) => {
+            db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $set: socialAccounts }, { upsert: true }).then((result) => {
                 console.log(result);
                 db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((user) => {
                     res.status(200).json(user)
@@ -737,36 +736,36 @@ module.exports = {
 
     },
 
-    getSocialAccounts:async(req,res)=>{
+    getSocialAccounts: async (req, res) => {
 
-        const userId=req.params.userId
+        const userId = req.params.userId
 
         console.log(userId);
 
-        if(userId===undefined) return res.status(401).json({message:"id is undefiend"})
+        if (userId === undefined) return res.status(401).json({ message: "id is undefiend" })
 
 
         try {
 
-           const socialAccounts=await  db.get().collection(USER_COLLECTION).aggregate([
+            const socialAccounts = await db.get().collection(USER_COLLECTION).aggregate([
                 {
-                    $match:{_id:objectId(userId)}
+                    $match: { _id: objectId(userId) }
                 },
                 {
-                    $project:{
-                        _id:0,
+                    $project: {
+                        _id: 0,
                         Facebook: 1,
                         Twitter: 1,
                         LinkedIn: 1,
                         Instagram: 1
-                        
+
                     }
                 }
             ]).toArray()
 
             console.log(socialAccounts);
 
-            res.status(200).json({socialAccounts})
+            res.status(200).json({ socialAccounts })
 
 
 
@@ -774,8 +773,8 @@ module.exports = {
 
             console.log(error);
 
-            res.status(500).json({message:""})
-            
+            res.status(500).json({ message: "" })
+
         }
     },
 
@@ -956,7 +955,7 @@ module.exports = {
 
 
             console.log(userId);
-            if (userId === null ||userId ===undefined) return res.status(401).json({ message: "userid is null " })
+            if (userId === null || userId === undefined) return res.status(401).json({ message: "userid is null " })
 
             let followRequest = await db.get().collection(USER_COLLECTION).aggregate([
                 {
@@ -964,7 +963,7 @@ module.exports = {
                 },
                 {
                     $project:
-                        { users: { $setDifference: [ "$followers","$followings"] }, _id: 0 }
+                        { users: { $setDifference: ["$followers", "$followings"] }, _id: 0 }
                 },
                 {
                     $unwind: "$users"
@@ -978,12 +977,12 @@ module.exports = {
                     }
                 },
                 {
-                    $unwind:"$user"
+                    $unwind: "$user"
                 },
                 {
-                    $project:{
-                        _id:"$user._id",
-                        name:"$user.name",
+                    $project: {
+                        _id: "$user._id",
+                        name: "$user.name",
                         ProfilePhotos: { $last: "$user.ProfilePhotos" }
                     }
                 }
@@ -1080,7 +1079,7 @@ module.exports = {
 
                     }
                 },
-             
+
                 {
                     $unwind: "$users"
                 },
@@ -1100,6 +1099,7 @@ module.exports = {
 
 
         } catch (error) {
+            res.status(500).json({ message: error.message })
 
         }
 
@@ -1114,7 +1114,7 @@ module.exports = {
                 {
                     $match: { _id: objectId(userId) }
                 },
-                
+
                 {
                     $lookup: {
                         from: USER_COLLECTION,
@@ -1125,7 +1125,7 @@ module.exports = {
                     }
                 },
                 {
-                    $unwind:"$users"
+                    $unwind: "$users"
                 },
                 {
                     $project: {
@@ -1142,10 +1142,12 @@ module.exports = {
             console.log(followings);
 
 
-            res.status(200).json({followings})
+            res.status(200).json({ followings })
 
 
         } catch (error) {
+            res.status(500).json({ message: error.message })
+
 
         }
 
@@ -1235,6 +1237,8 @@ module.exports = {
             res.status(200).json({ SavedPosts })
 
         } catch (error) {
+            res.status(500).json({ message: error.message })
+
 
         }
 
@@ -1325,15 +1329,48 @@ module.exports = {
             ]).toArray()
 
 
-            console.log(user);
+
 
             res.status(200).json({ user })
 
         } catch (error) {
 
+            res.status(500).json({ message: error.message })
+
+
         }
 
     },
+
+    getBanner:async (req, res) => {
+        try {
+            console.log("getBanner");
+            let banners = await db.get().collection(BANNER_COLLECTION).aggregate([
+                {
+                    $match: { expireAt: { $gte : new Date()}   }
+                }
+            ]).toArray()
+
+
+            let length= banners.length
+
+            let random = Math.floor( Math.random() * (length - 1) + 0)
+
+      
+
+        let banner= banners[random]
+
+
+            res.status(200).json(banner)
+
+
+        } catch (error) {
+
+            res.status(500).json({ message: error.message })
+
+
+        }
+    }
 
 
 

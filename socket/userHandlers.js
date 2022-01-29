@@ -10,11 +10,11 @@ const { NetworkContext } = require("twilio/lib/rest/supersim/v1/network")
 module.exports = (io, socket) => {
 
     const adding = (payload) => {
-        console.log(payload);
+       
         if(payload.id && payload.userId){
             console.log("create paylod", payload);
 
-            addOnlineUser({ socketId: payload.id, userId: payload.userId })
+           let value= addOnlineUser({ socketId: payload.id, userId: payload.userId })
             io.to(payload.id).emit("save", "added in to db");
         }
     }
@@ -242,6 +242,7 @@ module.exports = (io, socket) => {
     
 
     socket.on("login",adding);
+    socket.on("test",adding)
    
     socket.on('dolike', LikeNotification)
     socket.on('docomment', CommentNotification)

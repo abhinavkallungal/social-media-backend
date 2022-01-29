@@ -3,12 +3,12 @@ const express =require('express')
 
 
 const {test,Signup, login,reSendEmailOtp,varifyEmailOtp,reSendMobileOtp,thirdPartyLogin,forgotPassword,forgotPasswordReset,Dofollow,getFollowRequest,addProfilePhoto,getFollowers,getFollowings,getSavedPosts,getTagedPost,resetPassword,AddSocialAccount,
-    getSocialAccounts,
+    getSocialAccounts,getBanner,
     addCoverPhoto,verifyMobileOtp,checkUserName,getProfileDetails,addAccountDetails,DoSearch,getUserDetailes} =require('../controllers/userControllers')
-const {addPost,editPost,deletePost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriends,getTagsDetailes,getPostComments,gteAllPostFiles,videoUpload} =require('../controllers/postControllers')
+const {addPost,editPost,deletePost,getTrendingPost,getAllPosts,DoPostLike,DoPostSave,DoDeletepost,DoComment,DoReport,getFeedPosts,getFriends,getTagsDetailes,getPostComments,gteAllPostFiles,videoUpload} =require('../controllers/postControllers')
 const {getAllNotification} =require('../controllers/notificationControllers')
 const {sendMessage,getmessages} =require('../controllers/chatControllers')
-const {addStory,getALLStories,getStoriesSideBar} =require('../controllers/storiesControllers')
+const {addStory,getALLStories,getStoriesSideBar,viewSroty,getTrendingStories} =require('../controllers/storiesControllers')
 const {verifyLogin}= require('../middlewares/auth')
 
 const multer  = require('multer')
@@ -21,8 +21,6 @@ const upload = multer({ dest: 'uploads/' })
 module.exports = {
      upload : multer({ dest: 'uploads/' })
 
-
-  
 
 }
 
@@ -96,7 +94,13 @@ router.get('/getALLStories',getALLStories)
 
 router.get('/getStoriesSideBar',getStoriesSideBar)
 
+router.post('/viewSroty',viewSroty)
+
+router.get('/getTrendingStories',getTrendingStories)
+
 router.get('/getFollowRequest/:userId',getFollowRequest)
 
+router.get('/getTrendingPost',getTrendingPost)
 
+router.get('/getBanner',getBanner)
 module.exports=router

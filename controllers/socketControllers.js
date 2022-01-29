@@ -7,27 +7,34 @@ db.defaults({
     ONLINE_USERS: []
 });
 
+const redis = require("redis");
+const client = redis.createClient();
+
+
 
 let ONLINE_USERS = db.get('ONLINE_USERS');
-console.log(ONLINE_USERS.value());
+
 
 
 
 
 module.exports = {
-    addOnlineUser: ({ socketId, userId }) => {
-        console.log(socketId, userId);
+    addOnlineUser: async({ socketId, userId }) => {
+       
+        client.on('error', (err) => console.log('Redis Client Error', err));
 
-        let exist = db.get('ONLINE_USERS').find({ userId: userId }).value()
 
-        if (exist) {
+        await client.connect()
+        await client.set(userId, socketId);
+      
 
-            db.get('ONLINE_USERS').find({ userId: userId}).assign({ socketId: socketId }).write()
-        }else{
+        let values=await client.get(userId)
+        
+        console.log("**********************",values);
 
-            db.get('ONLINE_USERS').push({ userId, socketId}).write()
-
-        }
+        return value
+        
+       
 
     },
     removeOnlineuser: ({ socketId }) => {
@@ -36,15 +43,15 @@ module.exports = {
 
 
     },
-    findUser:async({userId})=>{
+    findUser: async ({ userId }) => {
 
-        console.log('usrid',userId+'');
+        console.log('usrid', userId + '');
 
-        let user =await db.get("ONLINE_USERS").filter({ userId:userId+''}).value()
+        let user = await db.get("ONLINE_USERS").filter({ userId: userId + '' }).value()
 
         console.log(user);
 
-        return user[0]   
+        return user[0]
 
 
     }

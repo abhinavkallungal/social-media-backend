@@ -2,13 +2,10 @@ const { POST_COLLECTION, USER_COLLECTION, COMMENT_COLLECTION, REPORTS_COLLECTION
 const db = require('../config/connection')
 const moment = require('moment')
 const objectId = require('mongodb').ObjectID
-const userHandlers = require("../socket/userHandlers")
-const { test } = require('../socket/socket')
-const multer = require('multer')
-const upload = multer({ dest: 'uploads/' })
+
+
 const { uploadFile ,videoUpload } = require('./awsS3Controllers')
-const { post } = require("../routers/User")
-const { response } = require("express")
+
 const fs =require("fs")
 const md5 =require('md5')
 
@@ -20,7 +17,7 @@ const md5 =require('md5')
 module.exports = {
     getFriends: async (req, res) => {
         const { userId } = req.params
-        console.log("userId",);
+       
 
         try {
             if (userId === undefined || userId === null) return res.status(204).json({ message: "insufficient content " })
@@ -67,8 +64,7 @@ module.exports = {
 
             ]).toArray()
 
-            console.log(friends);
-
+         
             res.status(200).json({ friends, message: "sussess" })
 
         } catch (error) {
@@ -80,11 +76,10 @@ module.exports = {
     },
 
     addPost: async (req, res) => {
-        console.log("here");
+       
         let result
         let files = []
-        console.log("call", req.body);
-
+      
         let { desc, Accessibility, userId, location, tag } = req.body
 
         if (tag === undefined) {
@@ -107,10 +102,10 @@ module.exports = {
                 userId: objectId(userId),
                 status: "active",
                 report: 0,
-                postedDate: moment().format()
+                postedDate:new Date() 
 
             }).then(async (data) => {
-                console.log(data);
+                
 
                 const post = await db.get().collection(POST_COLLECTION).findOne({ "_id": data.insertedId })
 
@@ -126,11 +121,10 @@ module.exports = {
 
 
         }
-        console.log(req.files.length);
-
+    
         if (req.files.length > 0) {
             req.files.map(async (file) => {
-                console.log(file);
+               
                 result = await uploadFile(file)
                 files.push(result.Location)
 
@@ -175,7 +169,7 @@ module.exports = {
             await db.get().collection(POST_COLLECTION).updateOne({_id:objectId(postId)},{$set:{video:result.Location}},{ upsert: true } )
 
            let post = await db.get().collection(POST_COLLECTION).findOne({_id:objectId(postId)})
-            console.log(result);
+         
             res.json({ finalFilename ,post });
         } else {
             res.json('ok');
@@ -337,9 +331,89 @@ module.exports = {
         }
 
     },
+    getTrendingPost:async (req,res)=>{
+
+        try {
+            
+           let trendingPost= await  db.get().collection(POST_COLLECTION).aggregate([
+       
+            
+            {
+                $match: { "postedDate": { $gt:  new Date(Date.now() - 24 * 60 * 60 * 1000) } }
+            },
+            {
+                $addFields: { likeCound: {$size: { "$ifNull": [ "$likes", [] ] } } }
+            }, 
+            {
+                $addFields: { commentCound: {$size: { "$ifNull": [ "$comments", [] ] } } }
+            }, 
+            {
+                $addFields: { trending: true }
+            }, 
+            {
+                $sort:{likeCound:-1,commentCound:-1}
+            },
+            {
+                $limit:1
+            },
+            {
+                $lookup: {
+                    from: USER_COLLECTION,
+                    localField: "userId",
+                    foreignField: "_id",
+                    as: "user",
+                },
+            },
+            {
+                $unwind: "$user",
+            },
+            {
+
+                $project: {
+                    _id: 1,
+                    desc: 1,
+                    files: 1,
+                    location: 1,
+                    tag: 1,
+                    Accessibility: 1,
+                    likes: 1,
+                    comments: 1,
+                    status: 1,
+                    report: 1,
+                    postedDate: 1,
+                    userId: 1,
+                    likeCound:1,
+                    commentCound:1,
+                    trending:1,
+                    video:1,
+                    user: {
+                        _id: 1,
+                        name: 1,
+                        ProfilePhotos: { $last: "$user.ProfilePhotos" }
+                    }
+
+                }
+
+            },
+            
+   
+                
+            ]).toArray()
+
+           
+
+            res.status(200).json(trendingPost)
+            
+        } catch (error) {
+
+          
+            
+        }
+
+    },
 
     getTagsDetailes: async (req, res) => {
-        console.log("sdasasdasd");
+      
         const { postId } = req.body
 
         try {
@@ -508,16 +582,15 @@ module.exports = {
     },
     DoPostSave: async (req, res) => {
         const { postId, userId } = req.body
-        console.log(postId, userId);
-
+    
         try {
             let user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
             let SavedExist = user?.SavedPost?.findIndex((SavedPost) => SavedPost == postId)
-            console.log(SavedExist);
+       
             if (SavedExist === -1 || SavedExist === undefined) {
                 db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $push: { SavedPost: objectId(postId) } }).then(() => {
                     db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((user) => {
-                        console.log(user);
+                       
                         res.status(200).json({ message: "saved", user, saved: true })
                     })
 
@@ -550,27 +623,26 @@ module.exports = {
     },
     DoDeletepost: async (req, res) => {
         const { postId, userId } = req.body
-        console.log(postId, userId);
+      
 
         try {
             let post = await db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) })
-            console.log(post);
+          
             if (post.userId == userId) {
-                console.log("if");
+            
                 db.get().collection(POST_COLLECTION).deleteOne({ _id: objectId(postId) }).then((result) => {
 
                     res.status(200).json({ message: "post is  successfully deleted" })
 
                 })
             } else {
-                console.log("else");
+               
 
                 res.status(401).json({ message: "you are not owner of the post so you cant delete the post" })
 
             }
         } catch (error) {
-            console.log(error);
-
+         
             res.status(500).json({ err: err.message })
 
 
@@ -669,8 +741,7 @@ module.exports = {
 
 
         } catch (error) {
-            console.log(error);
-
+           
             res.status(500).json({ err: err.message })
 
 
@@ -685,7 +756,7 @@ module.exports = {
 
     getPostComments: async (req, res) => {
         const { postId } = req.body
-        console.log(req.body);
+      
 
         try {
 
@@ -768,7 +839,7 @@ module.exports = {
 
 
         } catch (error) {
-            console.log(error);
+          
 
             res.status(500).json({ err: err.message })
 

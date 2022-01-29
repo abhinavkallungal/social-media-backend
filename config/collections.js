@@ -3,6 +3,7 @@ module.exports={
     ADMIN_COLLECTION:"admin",
     OTP_COLLECTION:"emailotp",
     POST_COLLECTION:"posts",
+    BANNER_COLLECTION:"banner",
     STORIES_COLLECTION:"stories",
     ONLINE_USERS_COLLECTION:"onlineUsers",
     COMMENT_COLLECTION:'comments',
