@@ -77,9 +77,7 @@ const onConnection = (socket) => {
   socket.on('disconnect', () => {
     console.log("disconnect", socket.id);
     removeOnlineuser({ socketId: socket.id })
-    socket.removeAllListeners('send message');
-    socket.removeAllListeners('disconnect');
-    io.removeAllListeners('connection');
+   
   })
 
 

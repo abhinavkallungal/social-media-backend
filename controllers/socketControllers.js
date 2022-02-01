@@ -1,57 +1,73 @@
 
-const low = require('lowdb')
-const FileSync = require('lowdb/adapters/FileSync')
-const adapter = new FileSync('./db.json')
-const db = low(adapter)
-db.defaults({
-    ONLINE_USERS: []
-});
 
-const redis = require("redis");
-const client = redis.createClient();
+
+const { ONLINE_USERS_COLLECTION } = require("../config/collections")
+const db = require('../config/connection')
+
+const { ObjectId } = require("mongodb")
+const { ObjectID } = require("bson")
 
 
 
-let ONLINE_USERS = db.get('ONLINE_USERS');
 
 
 
 
 
 module.exports = {
-    addOnlineUser: async({ socketId, userId }) => {
-       
-        client.on('error', (err) => console.log('Redis Client Error', err));
+    addOnlineUser: async ({ socketId, userId }) => {
+
+        let userExist = await db.get().collection(ONLINE_USERS_COLLECTION).findOne({ userId: ObjectId(userId) })
 
 
-        await client.connect()
-        await client.set(userId, socketId);
-      
+        if (!userExist) {
 
-        let values=await client.get(userId)
-        
-        console.log("**********************",values);
 
-        return value
-        
-       
+            db.get().collection(ONLINE_USERS_COLLECTION).insertOne({ socketId, userId: ObjectId(userId) }).then(() => {
+
+
+            }).catch(() => {
+
+            })
+        } else {
+            db.get().collection(ONLINE_USERS_COLLECTION).updateOne({ userId: ObjectID(userId) }, { $set: { socketId } }).then(() => {
+
+
+            }).catch(() => {
+
+            })
+        }
+
+
+
+
+
+
 
     },
-    removeOnlineuser: ({ socketId }) => {
+    removeOnlineuser: async ({ socketId }) => {
 
-        db.get('ONLINE_USERS').remove({ socketId: socketId }).write()
+
+        db.get().collection(ONLINE_USERS_COLLECTION).deleteOne({ socketId: socketId }).then(() => {
+            console.log("deleted");
+
+
+        }).catch(() => {
+
+        })
+
 
 
     },
     findUser: async ({ userId }) => {
 
-        console.log('usrid', userId + '');
+        let values = await db.get().collection(ONLINE_USERS_COLLECTION).findOne({ userId: ObjectId(userId) })
 
-        let user = await db.get("ONLINE_USERS").filter({ userId: userId + '' }).value()
 
-        console.log(user);
 
-        return user[0]
+        
+
+        return values
 
 
     }

@@ -83,24 +83,23 @@ router.post('/getAllNotifications',verifyLogin,getAllNotification)
 
 router.get('/getUserDetailes/:userId',verifyLogin,getUserDetailes)
 
-//router.post('/sendMessage',sendMessage)
-router.post('/getmessages',getmessages)
+router.post('/getmessages',verifyLogin,getmessages)
 
-router.post('/upload', videoUpload)
+router.post('/upload', verifyLogin,videoUpload)
 
-router.post('/addStory',addStory)
+router.post('/addStory',verifyLogin,addStory)
 
-router.get('/getALLStories',getALLStories)
+router.get('/getALLStories',verifyLogin,getALLStories)
 
-router.get('/getStoriesSideBar',getStoriesSideBar)
+router.get('/getStoriesSideBar',verifyLogin,getStoriesSideBar)
 
-router.post('/viewSroty',viewSroty)
+router.post('/viewSroty',verifyLogin,viewSroty)
 
-router.get('/getTrendingStories',getTrendingStories)
+router.get('/getTrendingStories',verifyLogin,getTrendingStories)
 
-router.get('/getFollowRequest/:userId',getFollowRequest)
+router.get('/getFollowRequest/:userId',verifyLogin,getFollowRequest)
 
-router.get('/getTrendingPost',getTrendingPost)
+router.get('/getTrendingPost',verifyLogin,getTrendingPost)
 
-router.get('/getBanner',getBanner)
+router.get('/getBanner',verifyLogin,getBanner)
 module.exports=router

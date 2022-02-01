@@ -13,7 +13,7 @@ const objectId = require('mongodb').ObjectID
 const crypto = require("crypto")
 const { existsSync } = require("fs")
 const { ObjectId } = require("mongodb")
- 
+
 
 module.exports = {
 
@@ -557,29 +557,42 @@ module.exports = {
     thirdPartyLogin: async (req, res) => {
         const { email } = req.body
 
-        const user = await db.get().collection(USER_COLLECTION).findOne({ email })
-
-        if (!user?.isActive) return res.status(400).json({ message: "This Account was Blocked" })
-
-        if (user) {
+        try {
 
 
 
-            const unReadNotifications = await db.get().collection(NOTIFICATIONS_COLLECTION).find({
-                $and: [
-                    { to: objectId(user._id) },
-                    { read: false }
-                ]
-            }).toArray()
+            const user = await db.get().collection(USER_COLLECTION).findOne({ email })
+
+            
+            
+            if (user) {
+                
+                if (!user?.isActive) return res.status(409).json({ message: "This Account not Exist" })
+                
+                
+                const unReadNotifications = await db.get().collection(NOTIFICATIONS_COLLECTION).find({
+                    $and: [
+                        { to: objectId(user._id) },
+                        { read: false }
+                    ]
+                }).toArray()
+                
+                
+                let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
+                
+                return res.status(200).json({ user, token, unReadNotificationsCount: unReadNotifications.length })
+            } else {
+                
+                
+                return res.status(401).json({ message: "user Can't Exist" })
+            }
+            
+        } catch (error) {
+            
+            return res.status(500).json({ message: error.message })
 
 
-            let token = await jwt.sign({ username: user.username, id: user._id, isUser: true }, "secret", { expiresIn: "1h" })
-
-            return res.status(200).json({ user, token, unReadNotificationsCount: unReadNotifications.length })
-        } else {
-            return res.status(401).json({ message: "user Can't Exist" })
         }
-
 
 
     },
@@ -1342,23 +1355,23 @@ module.exports = {
 
     },
 
-    getBanner:async (req, res) => {
+    getBanner: async (req, res) => {
         try {
             console.log("getBanner");
             let banners = await db.get().collection(BANNER_COLLECTION).aggregate([
                 {
-                    $match: { expireAt: { $gte : new Date()}   }
+                    $match: { expireAt: { $gte: new Date() } }
                 }
             ]).toArray()
 
 
-            let length= banners.length
+            let length = banners.length
 
-            let random = Math.floor( Math.random() * (length - 1) + 0)
+            let random = Math.floor(Math.random() * (length - 1) + 0)
 
-      
 
-        let banner= banners[random]
+
+            let banner = banners[random]
 
 
             res.status(200).json(banner)

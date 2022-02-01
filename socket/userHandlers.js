@@ -2,7 +2,6 @@ const { addOnlineUser, removeOnlineuser ,findUser} = require("../controllers/soc
 const db =require('../config/connection')
 const {USER_COLLECTION,CONVERSATION_COLLECTION,MESSAGE_COLLECTION,NOTIFICATIONS_COLLECTION} =require('../config/collections')
 const { ObjectId } = require("mongodb")
-const { NetworkContext } = require("twilio/lib/rest/supersim/v1/network")
 
 
 
@@ -18,6 +17,8 @@ module.exports = (io, socket) => {
             io.to(payload.id).emit("save", "added in to db");
         }
     }
+
+    
 
     const  LikeNotification=async ({NotificationId})=>{
         let notifications= await db.get().collection(NOTIFICATIONS_COLLECTION).aggregate([
@@ -192,6 +193,7 @@ module.exports = (io, socket) => {
     }
 
     const notificationSeen= async(userId)=>{
+   
 
 
         try {
@@ -242,7 +244,6 @@ module.exports = (io, socket) => {
     
 
     socket.on("login",adding);
-    socket.on("test",adding)
    
     socket.on('dolike', LikeNotification)
     socket.on('docomment', CommentNotification)
