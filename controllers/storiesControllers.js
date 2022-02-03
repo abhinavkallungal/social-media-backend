@@ -187,7 +187,7 @@ module.exports = {
 
             let story = db.get().collection(STORIES_COLLECTION).findOne({_id:ObjectId(storyId)})
             
-            let viewExist =story?.views?.findIndex((view)=> view==ViewerId)
+            let viewExist =story.views.findIndex((view)=> view==ViewerId)
 
             if(viewExist =-1){
 
