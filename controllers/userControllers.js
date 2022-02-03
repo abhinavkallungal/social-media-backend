@@ -231,8 +231,7 @@ module.exports = {
 
 
         } catch (err) {
-            console.log(err);
-
+            
             res.status(500).json({ err: err.message })
 
         }
@@ -243,13 +242,12 @@ module.exports = {
     reSendEmailOtp: async (req, res) => {
 
         const emailto = req.body.email
-        console.log(emailto);
-
+       
         try {
 
             let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: emailto })
-            console.log(emailExist);
-            if (emailExist !== null && emailExist?.emailVerified) return res.status(400).json({ message: "Email id already exist" })
+           
+            if (emailExist !== null && emailExist.emailVerified) return res.status(400).json({ message: "Email id already exist" })
 
 
             const value = Math.floor(Math.random() * Math.pow(10, 6))
@@ -268,7 +266,7 @@ module.exports = {
             res.status(200).json({ message: "email send", status })
 
         } catch (err) {
-            console.log(err);
+           
             res.status(500).json({ err: err.message })
 
         }
@@ -303,16 +301,16 @@ module.exports = {
 
 
                 }).catch((err) => {
-                    console.log(">>>>>>>>8")
+                    
 
                     res.status(500).json({ err: err.message })
 
                 })
 
-                console.log(">>>>>>>>9")
+              
 
             }).catch((err) => {
-                console.log(">>>>>>>>10")
+               
 
                 res.status(500).json({ err: err.message })
 
@@ -353,7 +351,7 @@ module.exports = {
     },
     verifyMobileOtp: (req, res) => {
         const { phone, otp } = req.body
-        console.log("verify email otp", phone, otp);
+      
 
         try {
             twilioClient.verify
@@ -363,7 +361,7 @@ module.exports = {
                     to: `+91${phone}`,
                     code: otp
                 }).then((data) => {
-                    console.log(data);
+                    
 
                     if (data.status === "approved") {
 
@@ -377,7 +375,7 @@ module.exports = {
 
 
                         }).catch((err) => {
-                            console.log(">>>>>>>>8")
+                           
 
                             res.status(500).json({ err: err.message })
 
@@ -468,7 +466,7 @@ module.exports = {
 
     forgotPasswordReset: async (req, res) => {
         const { password, ConfirmPassword, userId, Token } = req.body
-        console.log(req.body);
+       
         try {
 
             if (password === undefined || ConfirmPassword === undefined || userId === undefined || Token === undefined) return res.status(400).json({ message: "invalid data" })
@@ -500,13 +498,13 @@ module.exports = {
 
 
             } else {
-                console.log("dfaaaaaaa");
+               
                 res.status(500).json({ message: "server Error" })
             }
 
 
         } catch (error) {
-            console.log(error);
+            
             res.status(500).json({ message: "server Error" })
 
         }
@@ -517,19 +515,19 @@ module.exports = {
     resetPassword: async (req, res) => {
 
         const { oldPassword, newPassword, confirmPassword, userId } = req.body
-        console.log(req.body);
+        
 
         try {
 
             const user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
 
-            console.log(user);
+           
 
             if (!user) return res.status(400).json({ message: "User Can't Exist" })
 
             let isPasswordCorrect = await bcrypt.compare(oldPassword, user.password)
 
-            console.log(isPasswordCorrect);
+           
 
             if (!isPasswordCorrect) return res.status(400).json({ message: "Your Old Password Is incorrect" })
 
@@ -567,7 +565,7 @@ module.exports = {
             
             if (user) {
                 
-                if (!user?.isActive) return res.status(409).json({ message: "This Account not Exist" })
+                if (!user.isActive) return res.status(409).json({ message: "This Account not Exist" })
                 
                 
                 const unReadNotifications = await db.get().collection(NOTIFICATIONS_COLLECTION).find({
@@ -584,7 +582,7 @@ module.exports = {
             } else {
                 
                 
-                return res.status(401).json({ message: "user Can't Exist" })
+                return res.status(401).json({ message: "User Does't Exist" })
             }
             
         } catch (error) {
@@ -672,7 +670,7 @@ module.exports = {
     },
     addAccountDetails: (req, res) => {
         const { userdata } = req.body
-        console.log(userdata);
+       
         try {
             db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userdata._id) }, {
                 $set: {
@@ -692,7 +690,7 @@ module.exports = {
 
                 }
             }).then((result) => {
-                console.log(result);
+             
                 db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userdata._id) }).then((user) => {
                     res.status(200).json(user)
                 }).catch((err) => {
@@ -717,14 +715,14 @@ module.exports = {
     AddSocialAccount: (req, res) => {
 
         const { socialAccounts, userId } = req.body
-        console.log(socialAccounts, userId);
+       
 
         if (userId === undefined) return res.status(401).json({ message: "id is undefiend" })
 
 
         try {
             db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $set: socialAccounts }, { upsert: true }).then((result) => {
-                console.log(result);
+             
                 db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) }).then((user) => {
                     res.status(200).json(user)
                 }).catch((err) => {
@@ -741,8 +739,7 @@ module.exports = {
         } catch (error) {
 
 
-            console.log(error);
-
+           
             return res.status(500).json({ error: error.message });
 
         }
@@ -753,8 +750,7 @@ module.exports = {
 
         const userId = req.params.userId
 
-        console.log(userId);
-
+      
         if (userId === undefined) return res.status(401).json({ message: "id is undefiend" })
 
 
@@ -776,15 +772,14 @@ module.exports = {
                 }
             ]).toArray()
 
-            console.log(socialAccounts);
-
+        
             res.status(200).json({ socialAccounts })
 
 
 
         } catch (error) {
 
-            console.log(error);
+          
 
             res.status(500).json({ message: "" })
 
@@ -797,7 +792,7 @@ module.exports = {
         const { keyword, userId } = req.params
         try {
             let user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
-            console.log(userId);
+          
             let searchresult = await db.get().collection(USER_COLLECTION).aggregate([
 
                 {
@@ -855,7 +850,7 @@ module.exports = {
 
             ]).toArray()
 
-            console.log(searchresult);
+          
 
             let users = searchresult.filter((item) => {
 
@@ -869,7 +864,7 @@ module.exports = {
             res.status(200).json(users)
 
         } catch (error) {
-            console.log(error);
+           
 
         }
 
@@ -878,7 +873,7 @@ module.exports = {
     Dofollow: async (req, res) => {
 
         const { userId, currentuserId } = req.body
-        console.log(req.body);
+     
 
 
         try {
@@ -886,10 +881,10 @@ module.exports = {
 
             const currentUser = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) })
 
-            let followeExist = currentUser?.followings.findIndex((followings) => followings == userId)
-            console.log(followeExist);
+            let followeExist = currentUser.followings.findIndex((followings) => followings == userId)
+           
             if (followeExist === -1) {
-                console.log("if");
+              
 
                 db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $push: { followings: objectId(userId) } }).then((data) => {
 
@@ -915,20 +910,20 @@ module.exports = {
 
                     }).catch((error) => {
 
-                        console.log(error);
+                      
                         res.status(500).json({ message: error.message })
 
                     })
 
                 }).catch((error) => {
-                    console.log(error);
+                   
 
                     res.status(500).json({ message: error.message })
                 })
 
 
             } else {
-                console.log("here");
+               
 
                 await db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $pull: { followings: objectId(userId) } }).then(() => {
 
@@ -947,12 +942,11 @@ module.exports = {
 
 
             }
-            console.log("gjhgj");
-
+            
 
 
         } catch (error) {
-            console.log(error);
+           
             res.status(500).json({ message: error.message })
 
         }
@@ -967,7 +961,7 @@ module.exports = {
 
 
 
-            console.log(userId);
+           
             if (userId === null || userId === undefined) return res.status(401).json({ message: "userid is null " })
 
             let followRequest = await db.get().collection(USER_COLLECTION).aggregate([
@@ -1003,13 +997,13 @@ module.exports = {
 
             ]).toArray()
 
-            console.log(followRequest);
+         
 
             res.status(200).json({ followRequest })
 
 
         } catch (error) {
-            console.log(error);
+         
 
             res.status(500).json({ error })
 
@@ -1019,14 +1013,13 @@ module.exports = {
     },
 
     addProfilePhoto: (req, res) => {
-        console.log(req.body);
+      
         const { profilePhoto, currentuserId } = req.body
 
         try {
 
             db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $push: { ProfilePhotos: profilePhoto } }).then((data) => {
-                console.log(data);
-
+              
                 db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user) => {
 
                     res.status(200).json({ user, message: "profile photo updated" })
@@ -1036,7 +1029,7 @@ module.exports = {
             })
 
         } catch (error) {
-            console.log(error);
+            
 
             res.status(500).json({ message: error.message })
 
@@ -1045,14 +1038,13 @@ module.exports = {
 
     },
     addCoverPhoto: (req, res) => {
-        console.log(req.body);
+      
         const { coverPhoto, currentuserId } = req.body
 
         try {
 
             db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(currentuserId) }, { $set: { coverPhoto: coverPhoto } }, { upsert: true }).then((data) => {
-                console.log(data);
-
+                
                 db.get().collection(USER_COLLECTION).findOne({ _id: objectId(currentuserId) }).then((user) => {
 
                     res.status(200).json({ user, message: "cover photo updated" })
@@ -1062,8 +1054,7 @@ module.exports = {
             })
 
         } catch (error) {
-            console.log(error);
-
+            
             res.status(500).json({ message: error.message })
 
 
@@ -1152,8 +1143,7 @@ module.exports = {
 
             ]).toArray()
 
-            console.log(followings);
-
+    
 
             res.status(200).json({ followings })
 
@@ -1357,7 +1347,7 @@ module.exports = {
 
     getBanner: async (req, res) => {
         try {
-            console.log("getBanner");
+           
             let banners = await db.get().collection(BANNER_COLLECTION).aggregate([
                 {
                     $match: { expireAt: { $gte: new Date() } }

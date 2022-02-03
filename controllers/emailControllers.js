@@ -6,9 +6,10 @@ const nodemailer = require('nodemailer');
 let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user:  'oneskyine@gmail.com', 
-        pass:  "Oneskyine123*"
+        user:  process.env.EMAIL_ID,
+        pass:  process.env.EMAIL_PASSWORD
     }
+      
 });
 
 
@@ -16,10 +17,9 @@ module.exports.sendEmailOtp=(emailto,otp)=>{
 
 
     
-    console.log("Email", 1);
+
 
     try{
-        console.log("Email", 2);
 
 
         let mailOptions = {
@@ -34,20 +34,18 @@ module.exports.sendEmailOtp=(emailto,otp)=>{
             Best,
             The Vauld Team`
         };
-        console.log("Email", 3);
+       
 
         
         
         transporter.sendMail(mailOptions, (err, data) => {
-            console.log("Email", 4);
-
-            console.log(err,data);
+         
             if (err) {
-                console.log("Email", 5);
+                
 
                 return 'Error occurs'+err
             }
-            console.log("Email", 6);
+         
 
             return console.log( 'Email sent!!!')
         });
@@ -55,8 +53,7 @@ module.exports.sendEmailOtp=(emailto,otp)=>{
 
     }
     catch(err){
-        console.log("Email err", 7);
-
+        
         return err
     }
 
@@ -69,7 +66,7 @@ module.exports.sendPasswordResetLink=({emailto,link,name})=>{
     
 
     try{
-        console.log("Email", 2,emailto,link,name);
+       
 
 
         let mailOptions = {
@@ -86,20 +83,17 @@ module.exports.sendPasswordResetLink=({emailto,link,name})=>{
             
             ${link}`
         };
-        console.log("Email", 3);
+       
 
         
         
         transporter.sendMail(mailOptions, (err, data) => {
-            console.log("Email", 4);
-
-            console.log(err,data);
+           
             if (err) {
-                console.log("Email", 5);
-
+             
                 return 'Error occurs'+err
             }
-            console.log("Email", 6);
+           
 
             return console.log( 'Email sent!!!')
         });
@@ -107,7 +101,7 @@ module.exports.sendPasswordResetLink=({emailto,link,name})=>{
 
     }
     catch(err){
-        console.log("Email err", 7, err);
+    
 
         return err
     }

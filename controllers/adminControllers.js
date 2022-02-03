@@ -14,19 +14,18 @@ module.exports = {
     login: async (req, res) => {
 
         const { email, password } = req.body
-        console.log(req.body);
+      
 
         try {
-            console.log(1);
-
+           
             let admin = await db.get().collection(ADMIN_COLLECTION).findOne({ email: email })
-            console.log(2);
+            
             if (admin === null) return res.status(400).json({ message: "invalid username" })
-            console.log(3);
+           
             let isPasswordCorrect = await bcrypt.compare(password, admin.password)
-            console.log(4);
+           
             if (!isPasswordCorrect) return res.status(400).json({ message: "invalid Password" })
-            console.log(5);
+            
 
 
             let token = await jwt.sign({ email: admin.email, id: admin._id, isAdmin: true }, "AdminSecret", { expiresIn: "1h" })
@@ -70,21 +69,21 @@ module.exports = {
                 const users = await db.get().collection(USER_COLLECTION).find().toArray()
 
 
-                console.log("test1");
+               
 
                 res.status(200).json({ message: "the user was deleted", users })
 
             }).catch((err) => {
 
-                console.log("test2");
+         
 
                 res.status(500).json({ err: err.message })
 
             })
-            console.log("test3");
+            
 
         } catch (error) {
-            console.log("test4");
+           
 
             res.status(500).json({ err: err.message })
 
@@ -129,8 +128,7 @@ module.exports = {
       
         let {  description,days} = req.body
 
-        console.log(   "expireAt" ,new Date(Date.now() + (1000 * 60 * 60 * 24 * days)));
-
+       
      
 
         const savePost = () => {
@@ -207,8 +205,7 @@ module.exports = {
     deleteBanner: async (req, res) => {
 
         let id = req.params.id
-        console.log(id);
-
+       
         try {
           db.get().collection(BANNER_COLLECTION).deleteOne({_id:ObjectId(id)}).then(async()=>{
 
@@ -219,14 +216,14 @@ module.exports = {
                 
             ]).toArray()
 
-            console.log(Banner);
+            
 
             res.status(200).json({ message: "get All Banner", Banner })
           })
 
         } catch (err) {
 
-            console.log(err);
+           
 
             res.status(500).json({ err: err.message })
 

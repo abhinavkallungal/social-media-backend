@@ -1,14 +1,13 @@
 const express = require("express");
-const JWT = require("jsonwebtoken");
-const path = require('path')
+
 require('dotenv').config()
 
 var morgan = require('morgan')
 const cors = require('cors')
-const passport = require('passport')
+
 const bodyParser = require('body-parser')
 const socket = require('socket.io')
-const PassporStartup = require('./controllers/passport')
+
 const UserRouter = require('./routers/User')
 const AuthRouter = require('./routers/auth')
 const AdminRouter = require('./routers/Admin')
@@ -24,7 +23,6 @@ const app = express()
 
 const PORT = process.env.PORT
 
-console.log(PORT);
 
 app.use(cors());
 app.use(passport.initialize())

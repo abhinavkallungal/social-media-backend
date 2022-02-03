@@ -49,8 +49,7 @@ module.exports = {
 
 
         db.get().collection(ONLINE_USERS_COLLECTION).deleteOne({ socketId: socketId }).then(() => {
-            console.log("deleted");
-
+           
 
         }).catch(() => {
 

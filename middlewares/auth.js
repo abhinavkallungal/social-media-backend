@@ -18,7 +18,6 @@ module.exports = {
                 } else {
 
                     const decoded = jwtDecode(req.headers.authorization)
-                    console.log(decoded.id)
                     db.get().collection(USER_COLLECTION).findOne({ "_id": ObjectID(decoded.id) }).then((user) => {
                         if (user && user.isActive) {
 

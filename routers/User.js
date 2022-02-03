@@ -85,9 +85,9 @@ router.get('/getUserDetailes/:userId',verifyLogin,getUserDetailes)
 
 router.post('/getmessages',verifyLogin,getmessages)
 
-router.post('/upload', verifyLogin,videoUpload)
+router.post('/upload',videoUpload)
 
-router.post('/addStory',verifyLogin,addStory)
+router.post('/addStory',addStory)
 
 router.get('/getALLStories',verifyLogin,getALLStories)
 

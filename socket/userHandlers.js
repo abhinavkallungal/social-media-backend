@@ -11,7 +11,7 @@ module.exports = (io, socket) => {
     const adding = (payload) => {
        
         if(payload.id && payload.userId){
-            console.log("create paylod", payload);
+         
 
            let value= addOnlineUser({ socketId: payload.id, userId: payload.userId })
             io.to(payload.id).emit("save", "added in to db");
@@ -57,7 +57,7 @@ module.exports = (io, socket) => {
         ]).toArray()
 
         let OnlineUserExist= await findUser({userId:notifications[0].to})
-        console.log(">>",OnlineUserExist);
+      
 
         if(OnlineUserExist){
             const  unReadNotifications= await db.get().collection(NOTIFICATIONS_COLLECTION).find({$and:[
@@ -122,8 +122,6 @@ module.exports = (io, socket) => {
 
     const sendMessage=async({message,sender,receiver})=>{
 
-        console.log("sendMessage");
-
         let messageId
 
 
@@ -143,7 +141,7 @@ module.exports = (io, socket) => {
 
                     messageId=result.insertedId
 
-                    console.log("result.insertedId",result.insertedId);
+                   
                     
                     
                     
@@ -155,13 +153,11 @@ module.exports = (io, socket) => {
             if(!conversation[0]){
                 await  db.get().collection(CONVERSATION_COLLECTION).insertOne({users:[sender,receiver],createdAt:new Date(),}).then((result)=>{
                     
-                    console.log(result);
-                    
+                 
                     db.get().collection(MESSAGE_COLLECTION).insertOne({createdAt:new Date(),sender,message,conversation:result.insertedId}).then((result)=>{
                         
                         messageId=result.insertedId
-                        console.log("result.insertedId",result.insertedId);
-
+                        
                     })
 
 
@@ -169,7 +165,7 @@ module.exports = (io, socket) => {
             }
 
             let OnlineUserExist= await findUser({userId:receiver})
-            console.log(">>",OnlineUserExist,messageId);
+           
     
             if(OnlineUserExist){
                 const  message= await db.get().collection(MESSAGE_COLLECTION).find({_id:messageId}).toArray()  
@@ -186,7 +182,7 @@ module.exports = (io, socket) => {
             
         } catch (error) {
 
-            console.log(error);
+            
             
         }
 
@@ -202,7 +198,7 @@ module.exports = (io, socket) => {
                 let OnlineUserExist= await findUser({userId:userId})
 
                 if(OnlineUserExist){
-                    console.log(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>repeat");
+                  
 
                     io.to(OnlineUserExist.socketId).emit("notificationCound",notification=0)
 
@@ -211,7 +207,7 @@ module.exports = (io, socket) => {
             })
         } catch (error) {
 
-            console.log(error);
+          
             
         }
 
@@ -227,7 +223,7 @@ module.exports = (io, socket) => {
                 let OnlineUserExist= await findUser({userId:userId})
 
                 if(OnlineUserExist){
-                    console.log(Notifications.length , OnlineUserExist.socketId);
+                   
                     io.to(OnlineUserExist.socketId).emit("notificationCound",{notification:Notifications.length})
 
                 }
@@ -235,7 +231,7 @@ module.exports = (io, socket) => {
             
         } catch (error) {
 
-            console.log(error);
+           
             
         }
 

@@ -521,13 +521,14 @@ module.exports = {
 
         try {
             let post = await db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) })
-            let LikeExist = post?.likes.findIndex((like) => like == userId)
+            let LikeExist = post?.likes?.findIndex((like) => like == userId)
+            console.log(LikeExist);
             if (LikeExist === -1) {
                 db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { likes: objectId(userId) } }).then(() => {
 
-                    if (userId === post.userId) {
-
-                        return res.status(200).json({ message: " Liked", likes: likes.length, liked: false })
+                    if (userId == post.userId+"") {
+                      
+                        return res.status(200).json({ message: "Liked", likes: post.likes.length+1, liked: true })
 
                     } else {
 

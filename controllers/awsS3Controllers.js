@@ -29,7 +29,7 @@ function uploadFile(file) {
 
 function videoUpload(filename) {
   let file ='./uploads/' +filename
-  console.log(file);
+  
   const fileStream = fs.createReadStream(file)
 
   const uploadParams = {

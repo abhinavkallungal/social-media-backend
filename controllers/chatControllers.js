@@ -30,7 +30,7 @@ module.exports={
         sendMessage:async(req,res)=>{
             const {message,sender,receiver} =req.body
 
-            console.log(req.body);
+            
 
             try {
 
@@ -56,23 +56,22 @@ module.exports={
                 if(!conversation[0]){
                     db.get().collection(CONVERSATION_COLLECTION).insertOne({users:[sender,receiver],createdAt:new Date(),}).then((result)=>{
 
-                        console.log(result);
-
                         db.get().collection(MESSAGE_COLLECTION).insertOne({createdAt:new Date(),sender,message,conversation:result.insertedId}).then((data)=>{
                         
                             res.status(200).json({message:"message saved"})
-  
+                            
                         })
-
-
+                        
+                        
                     })
                 }
-
-
+                
+                
                 
             } catch (error) {
-
-                console.log(error);
+                
+                res.status(500).json({message:error.message})
+               
                 
             }
 
@@ -115,7 +114,7 @@ module.exports={
                 
             } catch (error) {
 
-                console.log(error);
+            
 
                 res.status(500).json({message:error.message})
                 
