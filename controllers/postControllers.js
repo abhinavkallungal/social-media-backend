@@ -521,7 +521,7 @@ module.exports = {
 
         try {
             let post = await db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) })
-            let LikeExist = post?.likes?.findIndex((like) => like == userId)
+            let LikeExist = post.likes.findIndex((like) => like == userId)
             console.log(LikeExist);
             if (LikeExist === -1) {
                 db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $push: { likes: objectId(userId) } }).then(() => {
@@ -586,7 +586,7 @@ module.exports = {
     
         try {
             let user = await db.get().collection(USER_COLLECTION).findOne({ _id: objectId(userId) })
-            let SavedExist = user?.SavedPost?.findIndex((SavedPost) => SavedPost == postId)
+            let SavedExist = user.SavedPost.findIndex((SavedPost) => SavedPost == postId)
        
             if (SavedExist === -1 || SavedExist === undefined) {
                 db.get().collection(USER_COLLECTION).updateOne({ _id: objectId(userId) }, { $push: { SavedPost: objectId(postId) } }).then(() => {
@@ -817,7 +817,7 @@ module.exports = {
         try {
             db.get().collection(REPORTS_COLLECTION).insertOne({ postId: objectId(postId), userId: objectId(userId), message, date: moment().format(), optoion }).then(async (result) => {
                 let post = await db.get().collection(POST_COLLECTION).findOne({ _id: objectId(postId) })
-                let noOfReport = post?.report
+                let noOfReport = post.report
                 if (noOfReport >= 9) {
 
                     db.get().collection(POST_COLLECTION).updateOne({ _id: objectId(postId) }, { $set: { status: "Block" }, $inc: { report: 1 } }).then(() => {
