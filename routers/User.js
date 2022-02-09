@@ -75,7 +75,7 @@ router.post("/getPostComments",verifyLogin,getPostComments)
 router.post("/getTagsDetailes",verifyLogin,getTagsDetailes)
 router.post("/postSave",verifyLogin,DoPostSave)
 
-router.delete("/deletePost",verifyLogin,DoDeletepost)
+router.post("/deletePost",verifyLogin,DoDeletepost)
 router.post("/report",verifyLogin,DoReport)
 router.post("/comment",verifyLogin,DoComment)
 

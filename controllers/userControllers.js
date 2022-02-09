@@ -30,6 +30,7 @@ module.exports = {
     checkUserName: async (req, res) => {
         const { username } = req.body
 
+
         try {
 
             let usernameExist = await db.get().collection(USER_COLLECTION).findOne({ username: username })
@@ -60,7 +61,7 @@ module.exports = {
 
         const { email, password, name, username, phone } = req.body
 
-
+console.log(req.body);
         const date = moment().format();
 
 
@@ -69,6 +70,7 @@ module.exports = {
             if (email !== undefined && phone === undefined) {
 
                 let emailExist = await db.get().collection(USER_COLLECTION).findOne({ email: email })
+
 
                 if (emailExist !== null && emailExist.emailVerified === true) return res.status(400).json({ message: "Email already exist" })
                 const hashpassword = await bcrypt.hash(password, 10)
@@ -91,6 +93,8 @@ module.exports = {
 
                 let status = sendEmailOtp(email, value)
 
+                console.log(status)
+
                 res.status(200).json({ message: "Email Otp send", status })
 
 
@@ -101,7 +105,16 @@ module.exports = {
 
             if (email === undefined && phone !== undefined) {
 
-                let phoneExist = await db.get().collection(USER_COLLECTION).findOne({ phone: phone })
+                console.log(phone);
+
+                let phoneExist = await db.get().collection(USER_COLLECTION).find({ phone: phone }).toArray()
+
+                if(phoneExist.length !== 0){
+                    phoneExist=phoneExist[0]
+                }else{
+                    phoneExist=false
+
+                }
 
                 if (phoneExist !== null && phoneExist.phoneVerified === true) return res.status(400).json({ message: "phone number   already exist" })
 
@@ -125,7 +138,8 @@ module.exports = {
 
                         return res.status(200).json({ status: 'send' })
                     }).catch((error) => {
-                        return res.status(400).json({ status: 'error' })
+                        console.log(err);
+                        return res.status(400).json({ status: 'error' ,error })
 
                     })
 
@@ -134,6 +148,7 @@ module.exports = {
 
 
         } catch (err) {
+            console.log(err);
 
 
             res.status(500).json({ err: err.message })
@@ -254,7 +269,7 @@ module.exports = {
 
             let unix = new moment().valueOf();
 
-            await db.get().collection(OTP_COLLECTION).remove({ emailto: emailto })
+            await db.get().collection(OTP_COLLECTION).deleteOne({ emailto: emailto })
 
             await db.get().collection(OTP_COLLECTION).createIndex({ createdAt: unix }, { expireAfterSeconds: 300 });
 

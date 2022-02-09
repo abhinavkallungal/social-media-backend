@@ -13,7 +13,9 @@ let transporter = nodemailer.createTransport({
 });
 
 
+
 module.exports.sendEmailOtp=(emailto,otp)=>{
+
 
 
     
@@ -41,6 +43,7 @@ module.exports.sendEmailOtp=(emailto,otp)=>{
         transporter.sendMail(mailOptions, (err, data) => {
          
             if (err) {
+                console.log(err);
                 
 
                 return 'Error occurs'+err
@@ -53,6 +56,8 @@ module.exports.sendEmailOtp=(emailto,otp)=>{
 
     }
     catch(err){
+
+        console.log(err);
         
         return err
     }
